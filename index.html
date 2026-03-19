@@ -106,8 +106,21 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
-html, body, input, button, textarea, select {
+html, body {
   height:100%; overflow:hidden;
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing:antialiased;
+  color:var(--t);
+  background-color:var(--bg);
+  transition:background-color 0.3s ease, color 0.3s ease;
+}
+input, button, textarea, select {
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing:antialiased;
+  color:var(--t);
+  background-color:transparent;
+  transition:background-color 0.3s ease, color 0.3s ease;
+}
   font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing:antialiased;
   color:var(--t);
@@ -745,17 +758,17 @@ html, body, input, button, textarea, select {
 .m-dots:active { transform:scale(0.85); opacity:1; color:var(--accent); }
 
 /* Action Sheet */
-.ios-actionsheet { position:fixed; bottom:calc(env(safe-area-inset-bottom) + 12px); left:12px; right:12px; z-index:2000; border-radius:24px; padding:0; box-shadow:0 8px 30px rgba(0,0,0,0.1); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:0.5px solid var(--sep); animation:ios-as-up 0.4s cubic-bezier(.32,0,.16,1); }
-.ios-as-body { border-radius:18px 18px 0 0; }
-.ios-as-title { font-size:12px; color:var(--t2); text-align:center; padding:12px 16px; border-bottom:0.5px solid var(--sep); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; }
-.ios-as-item { width:100%; padding:16px; border:none; background:none; font-family:inherit; font-size:17px; font-weight:600; color:var(--accent); cursor:pointer; text-align:center; transition:background 0.1s; display:flex; justify-content:center; align-items:center; gap:8px; }
-.ios-as-item:first-of-type { border-radius:0; }
-.ios-as-item:active { background:rgba(255,255,255,0.03); }
-html[theme='dark'] .ios-as-item:active { background:rgba(255,255,255,0.01); }
+/* Action Sheet */
+.ios-actionsheet { width:100%; border-radius:20px; padding:0; box-shadow:0 8px 40px rgba(0,0,0,0.35); backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px); border:0.5px solid var(--sep); background:var(--cd); overflow:hidden; }
+.ios-as-body { border-radius:20px; overflow:hidden; margin-bottom:0; }
+.ios-as-title { font-size:12px; color:var(--t2); text-align:center; padding:14px 16px; border-bottom:0.5px solid var(--sep); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; }
+.ios-as-item { width:100%; padding:17px 16px; border:none; background:none; font-family:inherit; font-size:17px; font-weight:500; color:var(--accent); cursor:pointer; text-align:center; transition:background 0.1s; display:flex; justify-content:center; align-items:center; gap:8px; }
 .ios-as-item:not(:last-child) { border-bottom:0.5px solid var(--sep); }
+.ios-as-item:active { background:var(--inp); }
 .ios-as-item.destructive { color:var(--red); }
-.ios-as-item.cancel { background:rgba(255,255,255,0.05); color:var(--accent); font-weight:800; border-radius:18px; border:0.5px solid var(--sep); border-top:none; }
-.ios-as-sep { height:0.5px; background:var(--sep); }
+.ios-as-item.cancel { background:var(--cd); color:var(--accent); font-weight:600; border-radius:20px; border:none; }
+.ios-as-item.cancel:active { background:var(--inp); }
+.ios-as-sep { display:none; }
 
 /* Custom Modal */
 .ios-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; z-index:2100; background:rgba(0,0,0,0.4); backdrop-filter:blur(5px); animation:fIn 0.2s; display:flex; align-items:center; justify-content:center; padding:20px; }
@@ -1036,7 +1049,7 @@ html[theme='dark'] .ios-as-item:active { background:rgba(255,255,255,0.01); }
 .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(min-width:480px){.notes-grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:768px){.notes-grid{grid-template-columns:repeat(2,1fr)}}
-.note-card{border-radius:20px;padding:14px 13px 12px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:5px;background:var(--cd);border:0.5px solid var(--cd-b);box-shadow:var(--sh-card);transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,opacity .15s;animation:pop .22s cubic-bezier(.2,0,.2,1) both;overflow:hidden;min-height:90px;}
+.note-card{border-radius:20px;padding:14px 13px 38px 13px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:5px;background:var(--cd);border:0.5px solid var(--cd-b);box-shadow:var(--sh-card);transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,opacity .15s;animation:pop .22s cubic-bezier(.2,0,.2,1) both;overflow:hidden;min-height:90px;}
 .note-card:active{transform:scale(.94);opacity:.85}
 .note-card-title{font-size:14px;font-weight:700;color:var(--t);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .note-card-title.empty{color:var(--t2);font-weight:400;font-style:italic}
@@ -1058,7 +1071,7 @@ html[theme='dark'] .ios-as-item:active { background:rgba(255,255,255,0.01); }
 .note-menu-cancel:active{opacity:.7;}
 .notes-pinned-label{font-size:10px;font-weight:700;color:var(--t2);letter-spacing:.10em;text-transform:uppercase;margin-bottom:8px;padding-left:2px}
 .notes-section{margin-bottom:18px}
-.note-editor-screen{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;background:var(--bg);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,0,.16,1);pointer-events:none;}
+.note-editor-screen{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;background:var(--bg);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,0,.16,1);pointer-events:none;overflow:hidden;}
 .note-editor-screen.open{transform:translateY(0);pointer-events:all;}
 .note-editor-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;flex-shrink:0;padding-top:max(14px,env(safe-area-inset-top));}
 .note-back-btn{display:flex;align-items:center;gap:4px;background:none;border:none;font-size:16px;font-weight:600;color:var(--accent);font-family:inherit;cursor:pointer;padding:6px 4px;transition:opacity .14s;}
@@ -1071,7 +1084,7 @@ html[theme='dark'] .ios-as-item:active { background:rgba(255,255,255,0.01); }
 .note-editor-meta{font-size:12px;color:var(--t2);font-weight:500;text-align:center;padding:4px 16px 10px;flex-shrink:0;}
 .note-title-inp{width:100%;padding:0 18px 10px;background:none;border:none;outline:none;font-size:26px;font-weight:700;letter-spacing:-.4px;color:var(--t);font-family:inherit;caret-color:var(--accent);flex-shrink:0;}
 .note-title-inp::placeholder{color:var(--t2)}
-.note-editor-body{flex:1;width:100%;padding:0 18px 80px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.note-editor-body{flex:1;min-height:0;width:100%;padding:0 18px 100px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .nb{display:block;width:100%;min-height:28px;font-size:16px;font-weight:400;line-height:1.75;color:var(--t);font-family:inherit;background:none;border:none;outline:none;padding:1px 0;word-break:break-word;caret-color:var(--accent);}
 .nb[data-type="heading"]{font-size:21px;font-weight:700;letter-spacing:-.3px;line-height:1.3;margin:6px 0 2px;}
 .nb[data-type="bullet"]{padding-left:18px;position:relative}
@@ -3219,22 +3232,24 @@ function renderMoney(){
   const emp = document.getElementById('moneyEmp');
   const histList = document.getElementById('budgetHistoryList');
   const histTitle = document.getElementById('histLblTitle');
-  let tIn = 0, tOut = 0;
+  let tIn = 0, tOut = 0, budgetOut = 0;
   if(list) list.innerHTML = ''; 
   if(histList) histList.innerHTML = '';
 
   const d = new Date();
   const currM = d.getMonth(); const currY = d.getFullYear();
 
-  // Tentukan data yang dirender
-  const activeData = moneyData.filter(m => {
-    if(activeBudget) return m.time >= activeBudget.start_time && m.time <= activeBudget.end_time;
+// KODE BARU — tampilkan SEMUA transaksi bulan ini, budget hanya untuk progress bar
+const activeData = moneyData.filter(m => {
     const md = new Date(m.time);
     return md.getMonth() === currM && md.getFullYear() === currY;
-  });
+});
 
   activeData.forEach(m => {
     if(m.type === 'in') tIn += m.amount; else tOut += m.amount;
+    if(activeBudget && m.type === 'out' && m.time >= activeBudget.start_time && m.time <= activeBudget.end_time) {
+      budgetOut += m.amount;
+    }
     const md = new Date(m.time);
     const dateStr = md.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) + ' ' + md.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
     if(list) list.innerHTML += `
@@ -3266,14 +3281,14 @@ function renderMoney(){
   if(bw) {
     if(activeBudget) {
       bw.style.display = 'block';
-      const sisa = activeBudget.amount - tOut;
+      const sisa = activeBudget.amount - budgetOut;
       const blt = document.getElementById('budgetLeftTxt'); if(blt) { blt.textContent = formatRp(sisa); blt.style.color = sisa < 0 ? 'var(--red)' : 'var(--t)'; }
       const btt = document.getElementById('budgetTotalTxt'); if(btt) btt.textContent = `dari ${formatRp(activeBudget.amount)}`;
 
       let pName = activeBudget.type === 'bulan' ? 'Bulanan' : activeBudget.type === 'minggu' ? 'Mingguan' : `${activeBudget.days} Hari`;
       const bpl = document.getElementById('bPeriodLbl'); if(bpl) bpl.textContent = pName;
 
-      const pct = Math.min(100, (tOut / activeBudget.amount) * 100);
+      const pct = Math.min(100, (budgetOut / activeBudget.amount) * 100);
       const fill = document.getElementById('budgetFill');
       if(fill) {
         fill.style.width = pct + '%';
@@ -3405,7 +3420,8 @@ let activeTransId = null;
 
 function openTransactionActions(id){
   activeTransId = id;
-  document.getElementById('moneyActionsheetOverlay').style.display = 'flex';
+  const overlay = document.getElementById('moneyActionsheetOverlay');
+  overlay.style.display = 'flex';
   document.getElementById('asDelete').onclick = () => { showDeleteConfirm(id); };
   document.getElementById('asEdit').onclick = () => { editTransaction(id); };
   haptic(20);
@@ -3827,15 +3843,16 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     </div>
   </div>
 </div>
-<div id="moneyActionsheetOverlay" class="ios-modal-overlay" style="display:none; align-items:flex-end; padding:12px; padding-bottom:calc(env(safe-area-inset-bottom) + 12px); z-index:2200;" onclick="if(event.target===this)closeActionsheet()">
-  <div id="moneyActionsheet" class="ios-actionsheet glass-panel" style="position:relative; width:100%; bottom:0; left:0; right:0; display:block; animation:ios-as-up 0.3s cubic-bezier(.32,0,.16,1);">
-    <div class="ios-as-body">
+<div id="moneyActionsheetOverlay" style="display:none; position:fixed; inset:0; z-index:2200; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:flex-end; padding:0 12px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);" onclick="if(event.target===this)closeActionsheet()">
+  <div style="width:100%; display:flex; flex-direction:column; gap:10px; animation:ios-as-up 0.32s cubic-bezier(.32,0,.16,1);">
+    <div class="ios-actionsheet">
       <div class="ios-as-title">Aksi Transaksi</div>
       <button class="ios-as-item" id="asEdit">✏️ Edit Detail</button>
       <button class="ios-as-item destructive" id="asDelete">🗑️ Hapus Transaksi</button>
     </div>
-    <div class="ios-as-sep"></div>
-    <button class="ios-as-item cancel" onclick="closeActionsheet()">Batal</button>
+    <div class="ios-actionsheet">
+      <button class="ios-as-item cancel" onclick="closeActionsheet()">Batal</button>
+    </div>
   </div>
 </div>
 
