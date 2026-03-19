@@ -108,12 +108,6 @@ input[type=number] {
 }
 html, body {
   height:100%; overflow:hidden;
-  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing:antialiased;
-  color:var(--t);
-  background-color:var(--bg);
-  transition:background-color 0.3s ease, color 0.3s ease;
-}
 input, button, textarea, select {
   font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing:antialiased;
@@ -126,7 +120,7 @@ input, button, textarea, select {
   color:var(--t);
   background-color:var(--bg);
   transition:background-color 0.3s ease, color 0.3s ease;
-}
+} 
 #crystalBg { display:none; }
 
 /* ══════════════════════════════════
@@ -369,6 +363,7 @@ input, button, textarea, select {
   padding-bottom:env(safe-area-inset-bottom, 20px);
 }
 :root:not(.light) .nav-bar { background:rgba(18,18,20,0.82); }
+:root.light .nav-bar { background:rgba(242,242,247,0.85); }
 .nav-item {
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:3px; border:none; background:transparent; color:var(--t2);
@@ -382,6 +377,9 @@ input, button, textarea, select {
 .nav-item.on .nav-icon-wrap {
   transform:scale(1.05);
   background:var(--accent-glass);
+}
+:root.light .nav-item.on .nav-icon-wrap {
+  background:rgba(0,122,255,0.1);
 }
 .nav-lbl { font-size:10px; font-weight:500; letter-spacing:0.01em; }
 .nav-indicator { display:none; }
@@ -1343,6 +1341,7 @@ input, button, textarea, select {
            <div style="display:flex; align-items:center; gap:8px;">
           <span id="budgetLeftTxt">Rp 0</span>
           <button onclick="confirmFinishBudget()" style="background:var(--green-bg); border:none; color:var(--green); font-size:12px; padding:4px 6px; border-radius:8px; cursor:pointer;" title="Selesaikan Budget">✓</button>
+          <button onclick="openEditBudgetModal()" style="background:var(--accent-glass); border:none; color:var(--accent); font-size:12px; padding:4px 6px; border-radius:8px; cursor:pointer;" title="Edit Budget">✏️</button>
           <button onclick="confirmDeleteBudget()" style="background:var(--red-bg); border:none; color:var(--red); font-size:12px; padding:4px 6px; border-radius:8px; cursor:pointer;" title="Hapus Permanen">🗑️</button>
         </div>
          </div>
@@ -1440,6 +1439,10 @@ input, button, textarea, select {
       <button class="popt tmp-opt" onclick="confirmDailyPerm('today')">
         <span class="popt-ico">☀️</span>
         <div><div class="popt-t">Hari Ini Saja</div><div class="popt-s">Hilang otomatis besok</div></div>
+      </button>
+      <button class="popt daily-opt" onclick="confirmDailyPerm('tomorrow')">
+        <span class="popt-ico">🌙</span>
+        <div><div class="popt-t">Hari Esok</div><div class="popt-s">Masuk jadwal besok saja</div></div>
       </button>
       <button class="popt cancel-opt" onclick="closeMo('moDailyPerm')">
         <span class="popt-ico">✕</span><div><div class="popt-t">Batal</div></div>
@@ -2137,7 +2140,7 @@ async function loadAll(){
 async function syncWeeklyToDaily(){
   if(!curUser)return;
   const todayKey=KEYS[(new Date().getDay()+6)%7];
-  const todayWeekly=(weekly[todayKey]||[]).filter(it=>it.perm||(it.daily_repeat&&it.week_added===THIS_WEEK));
+  const todayWeekly=(weekly[todayKey]||[]).filter(it=>it.perm||it.daily_repeat||(it.week_added===THIS_WEEK));
   if(!todayWeekly.length)return;
   let added=0;
   for(const wit of todayWeekly){
@@ -2214,8 +2217,31 @@ const deadlineVal=parseDeadline(addDeadlineCKBValue)||null;
 }
 async function confirmDailyPerm(type){
   closeMo('moDailyPerm');if(!pendingDailyItem)return;
-const{time,label,cat,priority,deadline}=pendingDailyItem;pendingDailyItem=null;
-const item={time,label,cat,priority,deadline};const dbId=await saveDaily(item);
+  const{time,label,cat,priority,deadline}=pendingDailyItem;pendingDailyItem=null;
+
+  if(type==='tomorrow'){
+    // Simpan ke weekly_items untuk hari besok
+    const tomorrowIdx=(new Date().getDay())%7; // 0=Sun→ JS, kita pakai KEYS index besok
+    const tomorrowKey=KEYS[(new Date().getDay()+6+1)%7]; // KEYS adalah Sen..Min (Senin=0)
+    const item={time,label,cat:cat||null,perm:false,daily_repeat:false,week_added:THIS_WEEK};
+    if(!curUser)return;
+    const{data,error}=await sb.from('weekly_items').insert({
+      user_id:curUser.id,day:tomorrowKey,...item,
+      priority:priority||'normal',deadline:deadline||null
+    }).select().single();
+    if(!error&&data){
+      if(!weekly[tomorrowKey])weekly[tomorrowKey]=[];
+      weekly[tomorrowKey].push({...item,id:data.id,dbId:data.id,priority,deadline});
+      weekly[tomorrowKey].sort((a,b)=>a.time.localeCompare(b.time));
+      updatePD();
+    }
+    showToast('Ditambahkan ke jadwal besok 🌙');
+    return;
+  }
+
+  // today atau perm: simpan ke daily hari ini
+  const item={time,label,cat,priority,deadline};
+  const dbId=await saveDaily(item);
   if(dbId){
     item.id=dbId;item.dbId=dbId;item.dailyPerm=(type==='perm');
     daily.push(item);daily.sort((a,b)=>a.time.localeCompare(b.time));
@@ -3490,7 +3516,21 @@ function openBudgetModal() {
   const pMod = document.getElementById('iosBudgetPeriodModal');
   if(pMod) pMod.style.display = 'flex';
 } 
-
+function openEditBudgetModal() {
+  if(!activeBudget) return;
+  // Isi ulang form dengan data budget aktif
+  tempBudgetType = activeBudget.type;
+  selBudgetOpt(activeBudget.type);
+  const hInp = document.getElementById('bHariInput');
+  if(hInp) hInp.value = activeBudget.days || '';
+  const bi = document.getElementById('iosBudgetInput');
+  if(bi) bi.value = activeBudget.amount;
+  // Tampilkan modal amount langsung (skip pilih periode)
+  const aMod = document.getElementById('iosBudgetAmountModal');
+  if(aMod) aMod.style.display = 'flex';
+  setTimeout(()=> { if(bi) bi.focus(); }, 100);
+  haptic(15);
+}
 function closeBudgetPeriod() { 
   const pMod = document.getElementById('iosBudgetPeriodModal');
   if(pMod) pMod.style.display = 'none'; 
@@ -3552,6 +3592,15 @@ async function saveBudgetFinal() {
 
   if(!curUser) return;
   showToast('Menyimpan budget...');
+
+// Jika sedang edit budget aktif, update saja nominalnya
+  if(activeBudget) {
+    await sb.from('app_budgets').update({amount: amt}).eq('id', activeBudget.id);
+    await loadMoney();
+    showToast('Budget diperbarui ✓');
+    haptic([20, 20]);
+    return;
+  }
 
   // Nonaktifkan budget lama
   await sb.from('app_budgets').update({is_active: false}).eq('user_id', curUser.id).eq('is_active', true);
