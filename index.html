@@ -56,42 +56,7 @@
   --rp: 12px;
   --rpill: 10px;
   --nb-h: 83px;
-}
-
-:root.light {
-  --bg: #f2f2f7;
-  --bg-secondary: rgba(255,255,255,0.92);
-  --bg-glass: rgba(255,255,255,0.7);
-  --t: #000000;
-  --t2: rgba(60,60,67,0.55);
-  --t3: rgba(60,60,67,0.28);
-  --accent: #007aff;
-  --accent-glow: rgba(0,122,255,0.25);
-  --accent-glass: rgba(0,122,255,0.1);
-  --red: #ff3b30;
-  --red-bg: rgba(255,59,48,0.1);
-  --green: #34c759;
-  --green-bg: rgba(52,199,89,0.1);
-  --sep: rgba(0,0,0,0.1);
-  --sep2: rgba(0,0,0,0.06);
-
-  --cd: rgba(255,255,255,0.9);
-  --cd-b: rgba(0,0,0,0.06);
-  --inp: rgba(118,118,128,0.1);
-  --inp-b: rgba(0,0,0,0.04);
-  --inp-f: rgba(118,118,128,0.18);
-
-  --toggle-bg: rgba(118,118,128,0.12);
-  --toggle-knob: #ffffff;
-
-  --sh-card: 0 2px 12px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
-  --sh-sm: 0 8px 32px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.07);
-
-  --pill: rgba(255,255,255,0.9);
-  --pill-b: rgba(0,0,0,0.06);
-  --pill-on: var(--accent);
-  --pill-on-t: #ffffff;
-}
+} 
 
 /* ══════════════════════════════════
    GLOBAL RESET
@@ -147,7 +112,12 @@ input, button, textarea, select {
 @keyframes sp-p{0%,100%{opacity:0;transform:scale(0) translateY(0);}40%{opacity:0.8;}60%{opacity:0.3;transform:scale(3) translateY(-16px);}}
 
 /* Glow background */
-.sp-glow-c{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.15) 0%,rgba(94,92,230,0.08) 40%,transparent 70%);animation:sp-glow-breathe 2.5s ease-in-out infinite alternate;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);}
+.sp-glow-c {
+  display: none !important;
+}
+:root.light .sp-glow-c {
+  display: none;
+}0%,rgba(94,92,230,0.08) 40%,transparent 70%);animation:sp-glow-breathe 2.5s ease-in-out infinite alternate;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);}
 @keyframes sp-glow-breathe{from{transform:translate(-50%,-50%) scale(0.8);opacity:0.5;}to{transform:translate(-50%,-50%) scale(1.2);opacity:1;}}
 
 /* Ring spinner */
@@ -425,15 +395,6 @@ input, button, textarea, select {
 .page-sticky-hdr-inner.visible ~ .sticky-bg,
 .sticky-bg.visible { opacity:1; }
 .topbar-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-.theme-toggle {
-  padding:5px 10px; border-radius:20px;
-  background:var(--inp); border:0.5px solid var(--sep2);
-  cursor:pointer; display:flex; align-items:center; gap:6px;
-}
-.toggle-icon { font-size:14px; }
-.toggle-track { width:32px; height:19px; border-radius:10px; background:var(--sep); position:relative; }
-.toggle-knob { position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:var(--toggle-knob); transition:0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.25); }
-:root.light .toggle-knob { transform:translateX(13px); }
 .user-chip { font-size:12px; font-weight:500; color:var(--t2); display:flex; align-items:center; gap:5px; }
 .user-chip-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 5px var(--green); }
 .logout-btn { background:transparent; border:none; color:var(--red); font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; }
@@ -1242,12 +1203,6 @@ input, button, textarea, select {
             <div class="hdr-t">Hari Ini</div>
           </div>
           <div class="topbar-right">
-            <div class="topbar-actions">
-              <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
-                <span class="toggle-icon" id="themeIcon">🌙</span>
-                <div class="toggle-track"><div class="toggle-knob"></div></div>
-              </div>
-            </div>
             <div class="user-chip"><span id="userChip">—</span></div>
             <button class="logout-btn" onclick="doLogout()">Keluar</button>
           </div>
@@ -1712,12 +1667,6 @@ input, button, textarea, select {
 const SB_URL='https://fcftupjevizxgqqhnolw.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjZnR1cGpldml6eGdxcWhub2x3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0OTYwNzQsImV4cCI6MjA4OTA3MjA3NH0.fxNHF3bLS1H0WbhDkitxzI3aX2WcK0bg_U2NZOMsfvg';
 const sb=supabase.createClient(SB_URL,SB_KEY);
-
-let manualTheme=localStorage.getItem('jadwal_theme')||null;
-function applyTheme(m){document.documentElement.classList.toggle('light',m==='light');document.getElementById('themeIcon').textContent=m==='light'?'☀️':'🌙'}
-function toggleTheme(){manualTheme=document.documentElement.classList.contains('light')?'dark':'light';localStorage.setItem('jadwal_theme',manualTheme);applyTheme(manualTheme)}
-function initTheme(){if(manualTheme){applyTheme(manualTheme)}else{const h=new Date().getHours();applyTheme(h>=6&&h<18?'light':'dark')}}
-initTheme();
 
 const DEFAULT_CATS=[
   {id:'kerja',name:'Kerja',color:'#5b8cff'},
@@ -3827,9 +3776,8 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
   if(labels.length === 0) return;
 
   const bgColors = labels.map((_, i) => colorPalette[i % colorPalette.length]);
-  const isLight = document.documentElement.classList.contains('light');
-  const textColor = isLight ? '#3c3c43' : 'rgba(235,235,245,0.6)';
-  const borderColor = isLight ? '#ffffff' : '#1c1c1e';
+   const textColor = 'rgba(235,235,245,0.6)';
+  const borderColor = '#1c1c1e';
 
   const newChart = new Chart(ctx, {
     type: 'doughnut',
