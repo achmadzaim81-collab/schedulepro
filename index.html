@@ -696,12 +696,57 @@ input, button, textarea, select {
   animation: slideFadeIn 0.35s ease-out forwards; 
 }
 
-@keyframes fadeInOverlay { 
-  from { opacity: 0; } 
-  to { opacity: 1; } 
+/* --- Improved iOS Style Animations --- */
+
+/* Easing function (punchy and tight, like fresh iOS) */
+:root {
+  --ease-ios: cubic-bezier(.32,0,.16,1);
 }
-@keyframes popModal { 
-  from { opacity: 0; transform: scale(0.85); } 
+
+/* Modal Overlay (Fade-in) */
+.ios-modal-overlay {
+  animation: iosOverlayIn .3s var(--ease-ios) forwards;
+  transition: none; /* remove old transition */
+}
+
+/* Modal Panel (Scale-in with slight bounce) */
+.ios-modal {
+  animation: iosModalIn .3s var(--ease-ios) forwards;
+  transition: none; /* remove old transition */
+}
+
+/* New, fresher Keyframes */
+@keyframes iosOverlayIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes iosModalIn {
+  0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+  60% { opacity: 1; transform: scale(1.03) translateY(-3px); } /* subtle bounce */
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Action Sheet (Slide-up with bounce) */
+.ios-actionsheet {
+  animation: iosSheetIn .3s var(--ease-ios) forwards;
+}
+
+@keyframes iosSheetIn {
+  0% { transform: translateY(100%); }
+  70% { transform: translateY(-5px); } /* subtle bounce up */
+  100% { transform: translateY(0); }
+}
+
+/* Haptic Effect Enhancements */
+button, .nav-item, .cat-item, .fab {
+  transition: transform 0.1s var(--ease-ios), opacity 0.1s var(--ease-ios);
+}
+button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:active, .fab:active {
+  transform: scale(0.95); /* press down effect */
+  opacity: 0.8;
+}
+
   to { opacity: 1; transform: scale(1); } 
 }
 @keyframes slideUpSheet { 
@@ -1306,13 +1351,7 @@ input, button, textarea, select {
          <div style="text-align:right; font-size:10px; color:var(--t3); margin-top:6px; font-weight:500;" id="budgetTotalTxt">dari Rp 0</div>
        </div>
      </div>
-
-     <div class="m-inp-wrap">
-       <input type="number" id="moneyAmount" class="m-inp" inputmode="numeric" pattern="[0-9]*" placeholder="Nominal (Cth: 50000)">
-       <button class="m-btn in" onclick="addMoney('in')">+</button>
-       <button class="m-btn out" onclick="addMoney('out')">-</button>
-     </div>
-
+     
      <div class="sl" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
        <span>Transaksi Terakhir</span>
        <button id="btnClearMonth" onclick="confirmClearMonth()" style="display:none; background:var(--red-bg); border:none; color:var(--red); font-size:10px; padding:4px 8px; border-radius:8px; cursor:pointer; font-weight:700;">Hapus Semua</button>
@@ -1354,6 +1393,9 @@ input, button, textarea, select {
       </div>
 
     </div>
+  </div>
+  <div id="moneyFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
+    <button class="fab" onclick="startAddMoney()" title="Catat Keuangan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
   </div>
 
   <nav class="nav-bar" id="navBar">
@@ -1461,22 +1503,13 @@ input, button, textarea, select {
       </div>
 
       <!-- Kategori -->
-      <div>
-        <div class="ios-cat-label">Kategori</div>
-        <div class="ios-cat-pill" id="addCatTap" onclick="openCatPicker('add')">
-          <div class="ios-cat-dot" id="addCatDot"></div>
-          <span class="ios-cat-val empty" id="addCatVal">Pilih kategori</span>
-          <span class="ios-cat-chevron">▾</span>
-</div>
-      </div>
-      <div>
+            <div>
         <div class="ios-cat-label">Prioritas</div>
         <div style="display:flex;gap:8px;">
-          <button class="priority-pill-btn priority-urgent" id="addPrioUrgent" onclick="setAddPriority('urgent')">🔴 Urgent</button>
-          <button class="priority-pill-btn priority-normal on" id="addPrioNormal" onclick="setAddPriority('normal')">🔵 Normal</button>
-          <button class="priority-pill-btn priority-low" id="addPrioLow" onclick="setAddPriority('low')">🟢 Low</button>
+          <button class="priority-pill-btn priority-urgent" id="addPrioUrgent" onclick="toggleAddPriority()">🔴 Urgent</button>
         </div>
       </div>
+
       <div>
         <div class="ios-cat-label">Deadline <span style="color:var(--t2);font-weight:400;text-transform:none;">(opsional)</span></div>
         <div class="ios-name-field" id="addDeadlineTap" onclick="openDeadlinePicker()" style="height:40px;">
@@ -1487,7 +1520,7 @@ input, button, textarea, select {
     </div>
 
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep); margin:0;">
-      <button class="ios-modal-btn cancel" onclick="closeMo('moAdd')" style="color:var(--red);">Batal</button>
+      ="closeMo('moAdd')" style="color:var(--red);">Batal</button>
       <button class="ios-modal-btn" id="addConfirmBtn" onclick="confirmAdd()">Simpan</button>
     </div>
   </div>
@@ -1533,7 +1566,7 @@ input, button, textarea, select {
     <div class="sh-h"></div><div class="sh-title">Hapus Kegiatan?</div>
     <div class="sh-sub" id="delConfSub"></div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep); margin:0; margin-top:16px;">
-      <button class="ios-modal-btn cancel" onclick="closeMo('moDelConf')">Batal</button>
+      ="closeMo('moDelConf')">Batal</button>
       <button class="ios-modal-btn destructive" onclick="execDel()">Hapus</button>
     </div>
   </div>
@@ -1557,12 +1590,10 @@ input, button, textarea, select {
           <span class="time-tap-val empty" id="editLabelTapVal">Nama kegiatan…</span>
         </div>
       </div>
-      <div class="add-form-field">
+            <div class="add-form-field">
         <div class="add-form-lbl">Prioritas</div>
         <div style="display:flex;gap:8px;">
-          <button class="priority-pill-btn priority-urgent" id="editPrioUrgent" onclick="setEditPriority('urgent')">🔴 Urgent</button>
-          <button class="priority-pill-btn priority-normal on" id="editPrioNormal" onclick="setEditPriority('normal')">🔵 Normal</button>
-          <button class="priority-pill-btn priority-low" id="editPrioLow" onclick="setEditPriority('low')">🟢 Low</button>
+          <button class="priority-pill-btn priority-urgent" id="editPrioUrgent" onclick="toggleEditPriority()">🔴 Urgent</button>
         </div>
       </div>
       <div class="add-form-field">
@@ -1574,7 +1605,7 @@ input, button, textarea, select {
       </div>
     </div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep); margin:0;">
-      <button class="ios-modal-btn cancel" onclick="closeMo('moEdit')" style="color:var(--red);">Batal</button>
+      ="closeMo('moEdit')" style="color:var(--red);">Batal</button>
       <button class="ios-modal-btn" onclick="execEdit()">Simpan</button>
     </div>
   </div>
@@ -1810,22 +1841,19 @@ let _deadlineTimeCtx='add';
 let _deadlineDateTemp='';
 let dlTimeValue='';
 
-function setAddPriority(p){
-  addPriorityValue=p;
-  ['urgent','normal','low'].forEach(x=>{
-    const btn=document.getElementById('addPrio'+x.charAt(0).toUpperCase()+x.slice(1));
-    if(btn)btn.classList.toggle('on',x===p);
-  });
+function toggleAddPriority(){
+  addPriorityValue = (addPriorityValue === 'urgent') ? 'normal' : 'urgent';
+  const btn = document.getElementById('addPrioUrgent');
+  if(btn) btn.classList.toggle('on', addPriorityValue === 'urgent');
   haptic(8);
 }
-function setEditPriority(p){
-  editPriorityValue=p;
-  ['urgent','normal','low'].forEach(x=>{
-    const btn=document.getElementById('editPrio'+x.charAt(0).toUpperCase()+x.slice(1));
-    if(btn)btn.classList.toggle('on',x===p);
-  });
+function toggleEditPriority(){
+  editPriorityValue = (editPriorityValue === 'urgent') ? 'normal' : 'urgent';
+  const btn = document.getElementById('editPrioUrgent');
+  if(btn) btn.classList.toggle('on', editPriorityValue === 'urgent');
   haptic(8);
 }
+
 function priorityLabel(p){
   if(p==='urgent')return{icon:'🔴',text:'Urgent',cls:'priority-urgent'};
   if(p==='low')return{icon:'🟢',text:'Low',cls:'priority-low'};
@@ -2135,9 +2163,9 @@ function openAddModal(ctx){
   addTimeValue='';addLabelValue='';
   const tv=document.getElementById('addTimeTapVal');if(tv){tv.textContent='--:--';tv.classList.add('empty')}
   const lv=document.getElementById('addLabelTapVal');if(lv){lv.textContent='Nama kegiatan…';lv.classList.add('empty')}
-  selectedCat['add']=null;updateCatDisplay('add');
-  addPriorityValue='normal';
-setAddPriority('normal');
+    addPriorityValue='normal';
+  const addPrioBtn = document.getElementById('addPrioUrgent');
+  if(addPrioBtn) addPrioBtn.classList.remove('on');
 addDeadlineCKBValue='';
 const addDLTap=document.getElementById('addDeadlineTapVal');
 if(addDLTap){addDLTap.textContent='DD/MM/YYYY';addDLTap.classList.add('empty');}
@@ -2311,8 +2339,10 @@ function openEdit(item,type){
   if(tv){if(editTimeValue){tv.textContent=editTimeValue;tv.classList.remove('empty')}else{tv.textContent='--:--';tv.classList.add('empty')}}
   editLabelValue=item.label;
   const elv=document.getElementById('editLabelTapVal');if(elv){elv.textContent=item.label||'Nama kegiatan…';elv.classList.toggle('empty',!item.label)}
-  editPriorityValue=item.priority||'normal';
-  setEditPriority(editPriorityValue);
+   editPriorityValue=item.priority||'normal';
+  const editPrioBtn = document.getElementById('editPrioUrgent');
+  if(editPrioBtn) editPrioBtn.classList.toggle('on', editPriorityValue === 'urgent');
+
   
   editDeadlineValue=item.deadline||'';
   const dlv=document.getElementById('editDeadlineTapVal');
@@ -2468,22 +2498,20 @@ function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTa
 inner.className='item-swipe'+prioClass+(done?' done':'');
   inner.style.position='relative';inner.style.zIndex='1';inner.style.willChange='transform';
   
-  let catBadgeHtml = cat ? `<div class="i-cat-lbl" style="color:${catColor};font-weight:500;">${esc(catInfo.name)}</div>` : '';
-  const prio=priorityLabel(priority||'normal');
+    const prio=priorityLabel(priority||'normal');
   const prioHtml=priority&&priority!=='normal'?`<span class="priority-badge ${prio.cls}">${prio.icon} ${prio.text}</span>`:'';
   const dl=deadlineStr(deadline||null);
   const dlHtml=dl?`<div class="deadline-txt${dl.overdue?' overdue':''}">${dl.overdue?'⚠️ ':'📅 '}${dl.text}</div>`:'';
   let taskInfo = hasTasks ? `<div style="display:inline-block; font-size:11px; color:var(--accent); background:var(--accent-glass); padding:4px 8px; border-radius:8px; font-weight:600; margin-top:6px;">📋 Ada Tugas</div>` : '';
 
   inner.innerHTML=`
-    <div class="item-cat-bar" style="background:${catColor}"></div>
     <div class="i-left">
       <div class="i-h">${String(h12).padStart(2,'0')}:${mm}</div>
       <div class="i-sub">${per}</div>
     </div>
     <div class="i-body">
       <div class="i-lbl">${esc(label)}</div>
-      ${catBadgeHtml}${prioHtml}${dlHtml}${taskInfo}
+      ${prioHtml}${dlHtml}${taskInfo}
     </div>
   `;
 
@@ -2530,8 +2558,13 @@ function navTo(p){
   track.style.transform=`translate3d(${p*(-(100/PAGE_COUNT))}%,0,0)`;
   curPage=p;
   for(let i=0;i<PAGE_COUNT;i++){const n=document.getElementById(`nav${i}`);if(n)n.classList.toggle('on',i===p)}
+
+  const mFab = document.getElementById('moneyFabWrap');
+  if(mFab) mFab.style.display = (p === 2) ? 'block' : 'none';
+
   haptic(12);
 }
+
 
 function _makePTR(pageId,ptrId,onRefresh){
   const page=document.getElementById(pageId);const ptr=document.getElementById(ptrId);
@@ -2571,7 +2604,8 @@ function setupSwipe(){
   track.addEventListener('touchmove',oM,{passive:false});
   track.addEventListener('touchend',oE,{passive:true});
 }
-function goTo(p){const t=document.getElementById('track');t.style.transform=`translate3d(${p*(-(100/PAGE_COUNT))}%,0,0)`;curPage=p;for(let i=0;i<PAGE_COUNT;i++){const n=document.getElementById(`nav${i}`);if(n)n.classList.toggle('on',i===p)}}
+function goTo(p){const t=document.getElementById('track');t.style.transform=`translate3d(${p*(-(100/PAGE_COUNT))}%,0,0)`;curPage=p;for(let i=0;i<PAGE_COUNT;i++){const n=document.getElementById(`nav${i}`);if(n)n.classList.toggle('on',i===p)} const mFab = document.getElementById('moneyFabWrap'); if(mFab) mFab.style.display = (p === 2) ? 'block' : 'none';}
+
 
 function setupStickyHeaders(){
   [0,1,2,3].forEach(i=>{
@@ -3076,8 +3110,7 @@ function renderTimeline(){
     const tasks=sorted.filter(it=>parseInt(it.time.split(':')[0])===h);
     tasks.forEach(it=>{
       const done=isDone(it.dbId);
-      const cat=getCat(it.cat);
-      const catColor=cat.color||'var(--accent)';
+            const catColor='var(--accent)';
       const prio=it.priority||'normal';
 
       const dot=document.createElement('div');
@@ -3106,13 +3139,6 @@ function renderTimeline(){
       timeChip.textContent=fmt(it.time);
       meta.appendChild(timeChip);
 
-      if(it.cat){
-        const catChip=document.createElement('span');
-        catChip.className='timeline-card-cat';
-        catChip.style.color=catColor;
-        catChip.textContent=cat.name;
-        meta.appendChild(catChip);
-      }
 
       if(prio&&prio!=='normal'){
         const pl=priorityLabel(prio);
@@ -3220,18 +3246,30 @@ const activeData = moneyData.filter(m => {
     return md.getMonth() === currM && md.getFullYear() === currY;
 });
 
+  // Urutkan dari yang terbaru
+  activeData.sort((a,b) => b.time - a.time);
+  let lastDateLabel = "";
+
   activeData.forEach(m => {
     if(m.type === 'in') tIn += m.amount; else tOut += m.amount;
     if(activeBudget && m.type === 'out' && m.time >= activeBudget.start_time && m.time <= activeBudget.end_time) {
       budgetOut += m.amount;
     }
     const md = new Date(m.time);
-    const dateStr = md.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) + ' ' + md.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+    const dateLabel = md.toLocaleDateString('id-ID', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
+    const timeStr = md.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+
+    // Buat garis pembatas jika harinya berganti
+    if(dateLabel !== lastDateLabel) {
+      if(list) list.innerHTML += `<div style="font-size:11px; font-weight:700; color:var(--t2); text-transform:uppercase; letter-spacing:0.06em; margin:24px 0 8px; padding-bottom:6px; border-bottom:0.5px solid var(--sep);">${dateLabel}</div>`;
+      lastDateLabel = dateLabel;
+    }
+
     if(list) list.innerHTML += `
       <div class="m-item">
         <div class="m-item-l">
           <div class="m-item-t">${m.name || (m.type === 'in' ? 'Pendapatan' : 'Pengeluaran')}</div>
-          <div class="m-item-d">${dateStr}</div>
+          <div class="m-item-d">${timeStr}</div>
         </div>
         <div class="m-item-r">
           <div class="m-item-a" style="color:var(--${m.type === 'in' ? 'green' : 'red'})">
@@ -3242,6 +3280,7 @@ const activeData = moneyData.filter(m => {
       </div>
     `;
   });
+
 
   const moneyBal = document.getElementById('moneyBal'); if(moneyBal) moneyBal.textContent = formatRp(tIn - tOut);
   const moneyIn = document.getElementById('moneyIn'); if(moneyIn) moneyIn.textContent = formatRp(tIn);
@@ -3309,86 +3348,81 @@ const activeData = moneyData.filter(m => {
   }
 }
 
-let pendingMoney = null;
+let tempMoneyAmt = 0;
+let tempMoneyType = '';
+let tempMoneyMethod = 'cash'; // 'cash' or 'card'
 
-function addMoney(type){
-  const inp = document.getElementById('moneyAmount');
-  const amt = parseFloat(inp.value);
-  if(!amt || amt <= 0) { haptic([30,15,30]); return; }
+function startAddMoney() {
+  document.getElementById('tempMoneyAmount').value = '';
+  document.getElementById('iosMoneyNominalModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('tempMoneyAmount').focus(), 100);
+  haptic(15);
+}
+function closeMoneyNominal() { document.getElementById('iosMoneyNominalModal').style.display = 'none'; }
 
-  // Validasi Batas Budget Aktif
+function nextMoneyType() {
+  const amt = parseFloat(document.getElementById('tempMoneyAmount').value);
+  if(!amt || amt <= 0) { showToast('Masukkan nominal yang valid'); haptic(20); return; }
+  tempMoneyAmt = amt;
+  closeMoneyNominal();
+  document.getElementById('iosMoneyTypeModal').style.display = 'flex';
+  haptic(10);
+}
+function closeMoneyType() { document.getElementById('iosMoneyTypeModal').style.display = 'none'; }
+
+function selectMoneyType(type) {
   if(type === 'out' && activeBudget) {
     let currOut = 0;
     moneyData.forEach(m => {
       if(m.type === 'out' && m.time >= activeBudget.start_time && m.time <= activeBudget.end_time) currOut += m.amount;
     });
-    if(currOut + amt > activeBudget.amount) {
+    if(currOut + tempMoneyAmt > activeBudget.amount) {
       showToast('Gagal! Melebihi sisa budget saat ini ❌');
       haptic([40,20,40]);
-      return; 
+      return;
     }
   }
+  tempMoneyType = type;
+  closeMoneyType();
 
-  pendingMoney = { type: type, amount: amt };
-  document.getElementById('iosNameTitle').textContent = type === 'in' ? "Pemasukan" : "Pengeluaran";
-  const nameInp = document.getElementById('iosNameInput');
-  nameInp.value = '';
-  document.getElementById('iosNameModal').style.display = 'flex';
-  setTimeout(() => nameInp.focus(), 100);
-  haptic(15);
+  document.getElementById('tempMoneyName').value = '';
+  selMoneyMethod('cash');
+  document.getElementById('iosMoneyDetailModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('tempMoneyName').focus(), 100);
+  haptic(10);
+}
+function closeMoneyDetail() { document.getElementById('iosMoneyDetailModal').style.display = 'none'; }
+
+function selMoneyMethod(m) {
+  tempMoneyMethod = m;
+  document.getElementById('btnMethCash').classList.toggle('on', m === 'cash');
+  document.getElementById('btnMethCard').classList.toggle('on', m === 'card');
+  haptic(8);
 }
 
-function skipNameModal(){
-  if(!pendingMoney) return;
-  // Jika dilewati, beri nama default
-  _savePendingMoney(pendingMoney.type === 'in' ? 'Pendapatan' : 'Pengeluaran');
+function skipMoneyDetail() {
+  closeMoneyDetail();
+  execSaveMoney(tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran');
 }
 
-function confirmNameModal(){
-  if(!pendingMoney) return;
-  let name = document.getElementById('iosNameInput').value.trim();
-  if(!name) name = pendingMoney.type === 'in' ? 'Pendapatan' : 'Pengeluaran';
-  _savePendingMoney(name);
+function finishMoneyDetail() {
+  let name = document.getElementById('tempMoneyName').value.trim();
+  if(!name) name = tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran';
+  const icon = tempMoneyMethod === 'card' ? '💳' : '💵';
+  closeMoneyDetail();
+  execSaveMoney(`${name} ${icon}`);
 }
 
-async function _savePendingMoney(name){
-  if(!curUser) { showToast('Sesi habis, silakan login ulang'); return; }
-
-  const newTrans = { 
-    id: Date.now(), 
-    user_id: curUser.id,
-    type: pendingMoney.type, 
-    amount: pendingMoney.amount, 
-    name: name,
-    time: new Date().getTime() 
-  };
-
-  // Update UI langsung di layar (Optimistic UI biar terasa instan)
+async function execSaveMoney(name) {
+  if(!curUser) return;
+  const newTrans = { id: Date.now(), user_id: curUser.id, type: tempMoneyType, amount: tempMoneyAmt, name: name, time: Date.now() };
   moneyData.unshift(newTrans);
   renderMoney();
-
-  // Bersihkan form modal
-  document.getElementById('moneyAmount').value = '';
-  document.getElementById('iosNameModal').style.display = 'none';
-  pendingMoney = null;
-
-  // Tembak data ke Supabase
-  const {error} = await sb.from('money').insert({
-    id: newTrans.id,
-    user_id: newTrans.user_id,
-    type: newTrans.type,
-    amount: newTrans.amount,
-    name: newTrans.name,
-    time: newTrans.time
-  });
-
-  if(error) {
-    showToast('Gagal sinkron ke cloud ⚠️');
-  } else {
-    showToast('Transaksi berhasil dicatat ✓');
-  }
+  const {error} = await sb.from('money').insert(newTrans);
+  if(error) showToast('Gagal sinkron'); else showToast('Dicatat ✓');
   haptic(20);
 }
+
 
 /* --- Money Tracker iOS Style Custom UI --- */
 let activeTransId = null;
@@ -3408,11 +3442,50 @@ function closeActionsheet(){
   haptic(10);
 }
 
+let editTransId = null;
 function editTransaction(id){
   closeActionsheet();
-  showToast("Fitur edit menyusul ✏️");
-  haptic([30, 20]);
+  const tr = moneyData.find(m => m.id === id);
+  if(!tr) return;
+  editTransId = id;
+
+  document.getElementById('editMoneyAmount').value = tr.amount;
+  document.getElementById('editMoneyName').value = tr.name;
+
+  const d = new Date(tr.time);
+  document.getElementById('editMoneyDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('editMoneyTime').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+
+  document.getElementById('iosEditMoneyModal').style.display = 'flex';
+  haptic(15);
 }
+function closeEditMoney() { document.getElementById('iosEditMoneyModal').style.display = 'none'; }
+
+async function saveEditMoney() {
+  const amt = parseFloat(document.getElementById('editMoneyAmount').value);
+  const name = document.getElementById('editMoneyName').value.trim();
+  const dStr = document.getElementById('editMoneyDate').value;
+  const tStr = document.getElementById('editMoneyTime').value;
+
+  if(!amt || !name || !dStr || !tStr) { showToast('Lengkapi semua data'); haptic(20); return; }
+
+  const newTime = new Date(`${dStr}T${tStr}`).getTime();
+  const tr = moneyData.find(m => m.id === editTransId);
+  if(!tr) return;
+
+  tr.amount = amt;
+  tr.name = name;
+  tr.time = newTime;
+
+  closeEditMoney();
+  renderMoney();
+  showToast('Menyimpan perubahan...');
+
+  const {error} = await sb.from('money').update({amount: amt, name: name, time: newTime}).eq('id', editTransId);
+  if(error) showToast('Gagal sinkron'); else showToast('Diperbarui ✓');
+  haptic(20);
+}
+
 
 function showDeleteConfirm(id){
   closeActionsheet();
@@ -3863,19 +3936,68 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     </div>
   </div>
 </div>
-<div id="iosNameModal" class="ios-modal-overlay" style="display:none">
+<div id="iosMoneyNominalModal" class="ios-modal-overlay" style="display:none">
   <div class="ios-modal glass-panel">
-    <div class="ios-modal-title" id="iosNameTitle">Nama Transaksi</div>
-    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nama pengeluaran/pemasukan.</div>
+    <div class="ios-modal-title">Catat Nominal</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan jumlah nominal uang.</div>
     <div style="padding:0 16px 16px;">
-      <input type="text" id="iosNameInput" class="ios-modal-input" placeholder="Contoh: Makan siang..." autocomplete="off">
+      <input type="number" id="tempMoneyAmount" class="ios-modal-input" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key==='Enter') nextMoneyType()" placeholder="Contoh: 50000" autocomplete="off">
     </div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
-      <button class="ios-modal-btn cancel" onclick="skipNameModal()">Lewati</button>
-      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="confirmNameModal()">Selesai</button>
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="closeMoneyNominal()">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="nextMoneyType()">Lanjut</button>
     </div>
   </div>
 </div>
+
+<div id="iosMoneyTypeModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Jenis Transaksi?</div>
+    <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Pilih jenis pencatatan untuk nominal ini.</div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red); font-weight:600;" onclick="selectMoneyType('out')">Pengeluaran</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:600;" onclick="selectMoneyType('in')">Pemasukan</button>
+    </div>
+  </div>
+</div>
+
+<div id="iosMoneyDetailModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Detail Catatan</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nama transaksi & metode pembayaran.</div>
+    <div style="padding:0 16px 16px;">
+      <input type="text" id="tempMoneyName" class="ios-modal-input" onkeydown="if(event.key==='Enter') finishMoneyDetail()" placeholder="Contoh: Beli kuota..." autocomplete="off">
+      <div class="ios-seg-ctrl" style="margin-top:12px;">
+        <button class="ios-seg-btn on" id="btnMethCash" onclick="selMoneyMethod('cash')">💵 Cash</button>
+        <button class="ios-seg-btn" id="btnMethCard" onclick="selMoneyMethod('card')">💳 Card</button>
+      </div>
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="skipMoneyDetail()">Lewati</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="finishMoneyDetail()">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<div id="iosEditMoneyModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Edit Detail</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Sesuaikan ulang data pencatatan ini.</div>
+    <div style="padding:0 16px 16px; display:flex; flex-direction:column; gap:10px;">
+      <input type="number" id="editMoneyAmount" class="ios-modal-input" placeholder="Nominal" autocomplete="off">
+      <input type="text" id="editMoneyName" class="ios-modal-input" placeholder="Nama Transaksi" autocomplete="off">
+      <div style="display:flex; gap:8px;">
+        <input type="date" id="editMoneyDate" class="ios-modal-input" style="flex:1;">
+        <input type="time" id="editMoneyTime" class="ios-modal-input" style="width:90px;">
+      </div>
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="closeEditMoney()">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="saveEditMoney()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div id="iosBudgetPeriodModal" class="ios-modal-overlay" style="display:none">
   <div class="ios-modal glass-panel">
     <div class="ios-modal-title">Atur Budget</div>
@@ -3905,8 +4027,8 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
       <input type="number" id="iosBudgetInput" class="ios-modal-input" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key==='Enter') saveBudgetFinal()" placeholder="Contoh: 1000000" autocomplete="off">
     </div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
-      <button class="ios-modal-btn cancel" onclick="closeBudgetAmount()">Batal</button>
-      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="saveBudgetFinal()">Selesai</button>
+           ="closeBudgetPeriod()">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="nextBudgetAmount()">Lanjut</button>
     </div>
   </div>
 </div>
@@ -3924,7 +4046,7 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     <div class="ios-modal-title">Selesaikan Budget?</div>
     <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Budget ini akan diakhiri dan dipindahkan ke Riwayat Budget.</div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
-      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosFinishBudgetModal').style.display='none'">Batal</button>
+      ="document.getElementById('iosFinishBudgetModal').style.display='none'">Batal</button>
       <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="execFinishBudget()">Selesai</button>
     </div>
   </div>
@@ -3935,7 +4057,7 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     <div class="ios-modal-title">Hapus Budget?</div>
     <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Pengukuran akan dihentikan dan data budget ini akan dihapus secara permanen dari riwayat.</div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
-      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosDeleteBudgetModal').style.display='none'">Batal</button>
+      ="document.getElementById('iosDeleteBudgetModal').style.display='none'">Batal</button>
       <button class="ios-modal-btn destructive" onclick="execDeleteBudget()">Hapus</button>
     </div>
   </div>
@@ -3946,7 +4068,7 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     <div class="ios-modal-title">Hapus Riwayat?</div>
     <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Data riwayat budget ini akan dihapus secara permanen.</div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
-      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosDeleteHistoryModal').style.display='none'">Batal</button>
+      ="document.getElementById('iosDeleteHistoryModal').style.display='none'">Batal</button>
       <button class="ios-modal-btn destructive" onclick="execDeleteHistory()">Hapus</button>
     </div>
   </div>
