@@ -355,8 +355,9 @@ input, button, textarea, select {
 .nav-indicator { display:none; }
 
 /* TRACK & PAGES */
-.track { display:flex; width:400%; height:100%; transition:transform .38s cubic-bezier(.32,0,.16,1); will-change:transform; }
-.page { flex-shrink:0; width:25%; height:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:50px 18px 24px; padding-top:calc(50px + env(safe-area-inset-top)); }
+/* TRACK & PAGES */
+.track { display:flex; width:500%; height:100%; transition:transform .38s cubic-bezier(.32,0,.16,1); will-change:transform; }
+.page { flex-shrink:0; width:20%; height:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:50px 18px 24px; padding-top:calc(50px + env(safe-area-inset-top)); }
 .page::-webkit-scrollbar { width:0px; }
 
 /* ══════════════════════════════════
@@ -1096,10 +1097,10 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 .nb[data-type="text"]{white-space:pre-wrap}
 .nb:empty::before{content:attr(data-ph);color:var(--t2);pointer-events:none}
 .nb-check{display:flex;align-items:flex-start;gap:12px;padding:3px 0;width:100%;}
-.nb-check-btn{width:22px;height:22px;min-width:22px;border-radius:7px;border:2px solid var(--sep);background:transparent;cursor:pointer;flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center;transition:background .14s,border-color .14s,transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent;padding:0;}
+.nb-check-btn{width:22px;height:22px;min-width:22px;border-radius:7px;border:2.5px solid var(--t3);background:transparent;cursor:pointer;flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center;transition:background .14s,border-color .14s,transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent;padding:0;}
 .nb-check-btn:active{transform:scale(.82)}
 .nb-check-btn.on{background:var(--green);border-color:var(--green)}
-.nb-check-btn.on::after{content:'';display:block;width:11px;height:6px;border-left:2.2px solid #fff;border-bottom:2.2px solid #fff;transform:rotate(-46deg) translateY(-1.5px);pointer-events:none;}
+.nb-check-btn.on::after{content:'';display:block;width:11px;height:6px;border-left:2.8px solid #fff;border-bottom:2.8px solid #fff;transform:rotate(-46deg) translateY(-1.5px);pointer-events:none;}
 .nb-check-text{flex:1;font-size:16px;line-height:1.75;color:var(--t);outline:none;border:none;background:none;padding:0;word-break:break-word;caret-color:var(--accent);font-family:inherit;min-width:0;}
 .nb-check-text.done{text-decoration:line-through;color:var(--t2);opacity:.55}
 .note-fmt-bar{display:flex;align-items:center;gap:2px;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:var(--bg-secondary);backdrop-filter:blur(20px);border-top:0.5px solid var(--sep);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -1112,11 +1113,13 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 :root.light .note-card.pinned{border-color:rgba(180,130,0,.2);background:rgba(251,191,36,.07)}
 
 /* Pull to Refresh */
-#ptr,#ptr1,#ptr2{position:fixed;top:-50px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:22px;background:var(--cd);box-shadow:var(--sh-sm);transition:top .2s ease, opacity .2s;opacity:0;pointer-events:none;border:0.5px solid var(--sep);}
-#ptr.pulling,#ptr1.pulling,#ptr2.pulling{opacity:1;}
-#ptr.refreshing,#ptr1.refreshing,#ptr2.refreshing{opacity:1;top:calc(env(safe-area-inset-top,0px) + 12px);}
-#ptr svg,#ptr1 svg,#ptr2 svg{width:20px;height:20px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;transition:transform .3s;}
-#ptr.refreshing svg,#ptr1.refreshing svg,#ptr2.refreshing svg{animation:spin .7s linear infinite;}
+/* Pull to Refresh */
+#ptr,#ptr1,#ptr2,#ptr3,#ptr4{position:fixed;top:-50px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:22px;background:var(--cd);box-shadow:var(--sh-sm);transition:top .2s ease, opacity .2s;opacity:0;pointer-events:none;border:0.5px solid var(--sep);}
+#ptr.pulling,#ptr1.pulling,#ptr2.pulling,#ptr3.pulling,#ptr4.pulling{opacity:1;}
+#ptr.refreshing,#ptr1.refreshing,#ptr2.refreshing,#ptr3.refreshing,#ptr4.refreshing{opacity:1;top:calc(env(safe-area-inset-top,0px) + 12px);}
+#ptr svg,#ptr1 svg,#ptr2 svg,#ptr3 svg,#ptr4 svg{width:20px;height:20px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;transition:transform .3s;}
+#ptr.refreshing svg,#ptr1.refreshing svg,#ptr2.refreshing svg,#ptr3.refreshing svg,#ptr4.refreshing svg{animation:spin .7s linear infinite;}
+
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* iOS Grouped Form Sheet */
@@ -1148,6 +1151,17 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
 @keyframes pop{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
 @keyframes tab-switch{from{opacity:0.5;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;transition:background .12s,transform .1s;position:relative;gap:2px;-webkit-tap-highlight-color:transparent;}
+.cal-cell:active{transform:scale(0.85);}
+.cal-cell.other-month{opacity:0.28;}
+.cal-cell .cal-num{font-size:15px;font-weight:500;color:var(--t);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.cal-cell.sunday .cal-num{color:var(--red);}
+.cal-cell.today .cal-num{background:var(--accent);color:#fff;font-weight:700;}
+.cal-cell.today.sunday .cal-num{background:var(--red);}
+.cal-cell.selected{background:var(--accent-glass);}
+.cal-cell.selected .cal-num:not(.today-num){outline:1.5px solid var(--accent);outline-offset:1px;}
+.cal-dots{display:flex;gap:2px;min-height:5px;align-items:center;}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);}
 @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
 </style>
 </head>
@@ -1231,8 +1245,10 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   <div id="ptr"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
   <div id="ptr1"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
   <div id="ptr2"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
-  <div id="ptr3"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
+    <div id="ptr3"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
+  <div id="ptr4"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
   <div class="wrap">
+
     <div class="track" id="track">
 
       <div class="page" id="pg0">
@@ -1392,9 +1408,54 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
         </div>
       </div>
 
+<div class="page" id="pg4">
+  <div class="page-sticky-hdr" id="stickyHdr4">
+    <div class="sticky-bg" id="stickyBg4"></div>
+    <div class="page-sticky-hdr-inner" id="stickyInner4">
+      <span class="sticky-title" id="calStickyTitle">Bulanan</span>
     </div>
   </div>
-  <div id="moneyFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
+  <div class="topbar" style="margin-bottom:10px; align-items:center;">
+    <div>
+      <div class="hdr-s" id="calMonthSubLbl">Jadwal</div>
+      <div class="hdr-t" id="calMonthTitle">Bulanan</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="calPrevMonth()" style="width:34px;height:34px;border-radius:50%;background:var(--inp);border:0.5px solid var(--sep2);color:var(--t);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">‹</button>
+      <button onclick="calGoToday()" style="font-size:12px;font-weight:700;padding:6px 12px;color:var(--accent);background:var(--accent-glass);border:none;border-radius:12px;cursor:pointer;">Hari Ini</button>
+      <button onclick="calNextMonth()" style="width:34px;height:34px;border-radius:50%;background:var(--inp);border:0.5px solid var(--sep2);color:var(--t);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">›</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;">
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--red);padding:6px 0;">Min</div>
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--t2);padding:6px 0;">Sen</div>
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--t2);padding:6px 0;">Sel</div>
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--t2);padding:6px 0;">Rab</div>
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--t2);padding:6px 0;">Kam</div>
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--t2);padding:6px 0;">Jum</div>
+    <div style="text-align:center;font-size:11px;font-weight:700;color:var(--t2);padding:6px 0;">Sab</div>
+  </div>
+  <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:18px;"></div>
+  <div id="calDayDetail" style="display:none;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div id="calSelDateBadge" style="font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-glass);padding:5px 12px;border-radius:12px;"></div>
+    </div>
+    <div id="calDayList" class="list"></div>
+    <div id="calDayEmpty" style="text-align:center;padding:24px 0;color:var(--t2);font-size:14px;display:none;">Tidak ada jadwal hari ini</div>
+  </div>
+</div>
+        
+        <div class="empty" id="mEmp">
+          <svg width="60" height="60" viewBox="0 0 72 72" fill="none"><rect x="10" y="16" width="52" height="46" rx="7" stroke="currentColor" stroke-width="2.5"/><path d="M24 10v12M48 10v12M10 32h52" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <div class="empty-t">Kalender Bulanan</div>
+          <div class="empty-s">Tampilan kalender segera hadir</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div id="moneyFabWrap"
+ style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
     <button class="fab" onclick="startAddMoney()" title="Catat Keuangan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
   </div>
 
@@ -1405,21 +1466,27 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
    <div class="nav-indicator"></div>
  </button>
  <button class="nav-item" id="nav1" onclick="navTo(1)">
-   <div class="nav-icon-wrap"><span class="nav-icon">📅</span></div>
+   <div class="nav-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="4"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 15h3M13 15h3M8 19h3" stroke-width="1.6"/></svg></div>
    <span class="nav-lbl">Mingguan</span>
    <div class="nav-indicator"></div>
  </button>
  <button class="nav-item" id="nav2" onclick="navTo(2)">
-   <div class="nav-icon-wrap"><span class="nav-icon">💰</span></div>
+<div class="nav-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="2.5"/></svg></div>
    <span class="nav-lbl">Keuangan</span>
    <div class="nav-indicator"></div>
  </button>
  <button class="nav-item" id="nav3" onclick="navTo(3)">
-   <div class="nav-icon-wrap"><span class="nav-icon">📝</span></div>
+   <div class="nav-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9"/><path d="M20.5 2.5a2.121 2.121 0 0 1 3 3L12 17l-4 1 1-4 11.5-11.5Z"/></svg></div>
    <span class="nav-lbl">Catatan</span>
    <div class="nav-indicator"></div>
  </button>
+ <button class="nav-item" id="nav4" onclick="navTo(4)">
+<div class="nav-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="4"/><path d="M16 2v4M8 2v4M3 10h18"/><rect x="7" y="14" width="4" height="4" rx="1" fill="currentColor" stroke="none"/></svg></div>
+   <span class="nav-lbl">Bulanan</span>
+   <div class="nav-indicator"></div>
+ </button>
 </nav>
+
 </div>
 
 <div class="ov" id="moDailyPerm" onclick="if(event.target===this)closeMo('moDailyPerm')">
@@ -1788,7 +1855,12 @@ function confirmTimePicker(){
   closeMo('moTimePicker');tpkBuf='';
   if(tpkCtx==='add'){addTimeValue=val;updateTimeTap('add',val);}
   else if(tpkCtx==='edit'){editTimeValue=val;updateTimeTap('edit',val);}
-    else if(tpkCtx==='dlTime'){
+    else if(tpkCtx==='moneyEdit'){
+    editMoneyTimeValue = val;
+    const _etv = document.getElementById('editMoneyTimeVal');
+    if(_etv){ _etv.textContent = val; _etv.classList.remove('empty'); }
+  }
+  else if(tpkCtx==='dlTime'){
     dlTimeValue = val;
     _applyDeadline(_deadlineDateTemp, val); // Langsung simpan jam deadline-nya
   }
@@ -2551,7 +2623,7 @@ function selDay_(k){selDay=k;KEYS.forEach(d=>document.getElementById(`p${d}`).cl
 function updatePD(){KEYS.forEach(k=>{const pd=document.getElementById(`pd${k}`);if(!pd)return;pd.innerHTML='';const items=weekly[k]||[];items.slice(0,3).forEach(it=>{const d=document.createElement('div');const cat=getCat(it.cat);d.className='pdot';d.style.backgroundColor=cat.color||'var(--t)';pd.appendChild(d)})})}
 function updateWLbl(){const name=FULL[KEYS.indexOf(selDay)];document.getElementById('wSec').textContent=`Jadwal ${name}`}
 
-const PAGE_COUNT=4;
+const PAGE_COUNT=5;
 function navTo(p){
   if(curPage===p)return;
   const track=document.getElementById('track');
@@ -2608,7 +2680,7 @@ function goTo(p){const t=document.getElementById('track');t.style.transform=`tra
 
 
 function setupStickyHeaders(){
-  [0,1,2,3].forEach(i=>{
+  [0,1,2,3,4].forEach(i=>{
     const page=document.getElementById('pg'+i);
     const inner=document.getElementById('stickyInner'+i);
     const bg=document.getElementById('stickyBg'+i);
@@ -3269,6 +3341,7 @@ const activeData = moneyData.filter(m => {
       <div class="m-item">
         <div class="m-item-l">
           <div class="m-item-t">${m.name || (m.type === 'in' ? 'Pendapatan' : 'Pengeluaran')}</div>
+          ${m.desc ? `<div style="font-size:11px;color:var(--t3);font-style:italic;margin-bottom:1px;">${m.desc}</div>` : ''}
           <div class="m-item-d">${timeStr}</div>
         </div>
         <div class="m-item-r">
@@ -3402,20 +3475,21 @@ function selMoneyMethod(m) {
 
 function skipMoneyDetail() {
   closeMoneyDetail();
-  execSaveMoney(tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran');
+  execSaveMoney(tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran', '');
 }
 
 function finishMoneyDetail() {
   let name = document.getElementById('tempMoneyName').value.trim();
+  const desc = document.getElementById('tempMoneyDesc').value.trim();
   if(!name) name = tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran';
   const icon = tempMoneyMethod === 'card' ? '💳' : '💵';
   closeMoneyDetail();
-  execSaveMoney(`${name} ${icon}`);
+  execSaveMoney(`${name} ${icon}`, desc);
 }
 
-async function execSaveMoney(name) {
+async function execSaveMoney(name, desc) {
   if(!curUser) return;
-  const newTrans = { id: Date.now(), user_id: curUser.id, type: tempMoneyType, amount: tempMoneyAmt, name: name, time: Date.now() };
+  const newTrans = { id: Date.now(), user_id: curUser.id, type: tempMoneyType, amount: tempMoneyAmt, name: name, desc: desc||'', time: Date.now() };
   moneyData.unshift(newTrans);
   renderMoney();
   const {error} = await sb.from('money').insert(newTrans);
@@ -3443,6 +3517,16 @@ function closeActionsheet(){
 }
 
 let editTransId = null;
+let editMoneyTimeValue = '';
+function openMoneyTimePicker(){
+  const parts = (editMoneyTimeValue||'00:00').split(':');
+  tpkHourVal = parts[0]||'00'; tpkMinVal = parts[1]||'00'; tpkSeg='hour'; tpkBuf='';
+  tpkRender();
+  document.getElementById('tpkLabel').textContent = 'Pilih Jam Transaksi';
+  tpkCtx = 'moneyEdit';
+  document.getElementById('moTimePicker').classList.add('on');
+  haptic(10);
+}
 function editTransaction(id){
   closeActionsheet();
   const tr = moneyData.find(m => m.id === id);
@@ -3451,10 +3535,13 @@ function editTransaction(id){
 
   document.getElementById('editMoneyAmount').value = tr.amount;
   document.getElementById('editMoneyName').value = tr.name;
+  document.getElementById('editMoneyDesc').value = tr.desc || '';
 
   const d = new Date(tr.time);
   document.getElementById('editMoneyDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  document.getElementById('editMoneyTime').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  editMoneyTimeValue = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const _etv = document.getElementById('editMoneyTimeVal');
+  if(_etv){ _etv.textContent = editMoneyTimeValue; _etv.classList.remove('empty'); }
 
   document.getElementById('iosEditMoneyModal').style.display = 'flex';
   haptic(15);
@@ -3465,23 +3552,25 @@ async function saveEditMoney() {
   const amt = parseFloat(document.getElementById('editMoneyAmount').value);
   const name = document.getElementById('editMoneyName').value.trim();
   const dStr = document.getElementById('editMoneyDate').value;
-  const tStr = document.getElementById('editMoneyTime').value;
+  const tStr = editMoneyTimeValue || '00:00';
 
   if(!amt || !name || !dStr || !tStr) { showToast('Lengkapi semua data'); haptic(20); return; }
 
+  const desc = document.getElementById('editMoneyDesc').value.trim();
   const newTime = new Date(`${dStr}T${tStr}`).getTime();
   const tr = moneyData.find(m => m.id === editTransId);
   if(!tr) return;
 
   tr.amount = amt;
   tr.name = name;
+  tr.desc = desc;
   tr.time = newTime;
 
   closeEditMoney();
   renderMoney();
   showToast('Menyimpan perubahan...');
 
-  const {error} = await sb.from('money').update({amount: amt, name: name, time: newTime}).eq('id', editTransId);
+  const {error} = await sb.from('money').update({amount: amt, name: name, desc: desc, time: newTime}).eq('id', editTransId);
   if(error) showToast('Gagal sinkron'); else showToast('Diperbarui ✓');
   haptic(20);
 }
@@ -3886,6 +3975,148 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
   });
   saveInstanceCb(newChart);
 }
+/* ═══ KALENDER BULANAN ═══ */
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calSelDate = null;
+
+function calGoToday(){
+  calYear = new Date().getFullYear();
+  calMonth = new Date().getMonth();
+  calSelDate = getLocalDate();
+  renderCal();
+  calShowDay(calSelDate);
+}
+function calPrevMonth(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCal(); }
+function calNextMonth(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCal(); }
+
+function calGetItemsForDate(dateStr){
+  // Kumpulkan dari daily dan weekly
+  const all = [];
+  const d = new Date(dateStr+'T00:00:00');
+  const dayIdx = (d.getDay()+6)%7; // 0=Sen
+  const dayKey = KEYS[dayIdx];
+
+  // daily: items yang punya time dan cocok tanggal
+  (daily||[]).forEach(it=>{
+    const itDate = it.date || TODAY_KEY;
+    if(itDate === dateStr) all.push(it);
+  });
+  // weekly: items di hari yg sesuai (permanen/weekly)
+  (weekly[dayKey]||[]).forEach(it=>{ all.push(it); });
+
+  return all.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+}
+
+function renderCal(){
+  const grid = document.getElementById('calGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const title = document.getElementById('calMonthTitle');
+  if(title) title.textContent = months[calMonth]+' '+calYear;
+  const sticky = document.getElementById('calStickyTitle');
+  if(sticky) sticky.textContent = months[calMonth]+' '+calYear;
+
+  const today = getLocalDate();
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Min
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+
+  // Isi grid: mulai dari Minggu
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  for(let i=0; i<totalCells; i++){
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    let dateStr, isOther = false;
+
+    if(i < firstDay){
+      const d = daysInPrev - firstDay + i + 1;
+      const m = calMonth === 0 ? 11 : calMonth-1;
+      const y = calMonth === 0 ? calYear-1 : calYear;
+      dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      isOther = true;
+    } else if(i >= firstDay + daysInMonth){
+      const d = i - firstDay - daysInMonth + 1;
+      const m = calMonth === 11 ? 0 : calMonth+1;
+      const y = calMonth === 11 ? calYear+1 : calYear;
+      dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      isOther = true;
+    } else {
+      const d = i - firstDay + 1;
+      dateStr = calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    }
+
+    if(isOther) cell.classList.add('other-month');
+    const dow = i % 7; // 0=Min, 6=Sab
+    if(dow === 0) cell.classList.add('sunday');
+    if(dateStr === today) cell.classList.add('today');
+    if(dateStr === calSelDate) cell.classList.add('selected');
+
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-num';
+    if(dateStr === today) numEl.classList.add('today-num');
+    numEl.textContent = parseInt(dateStr.split('-')[2]);
+    cell.appendChild(numEl);
+
+    // Dots jadwal
+    const items = calGetItemsForDate(dateStr);
+    if(items.length > 0){
+      const dots = document.createElement('div');
+      dots.className = 'cal-dots';
+      const max = Math.min(items.length, 3);
+      for(let j=0;j<max;j++){
+        const dot = document.createElement('div');
+        dot.className = 'cal-dot';
+        dots.appendChild(dot);
+      }
+      cell.appendChild(dots);
+    }
+
+    cell.onclick = ()=>{ calSelDate = dateStr; renderCal(); calShowDay(dateStr); };
+    grid.appendChild(cell);
+  }
+}
+
+function calShowDay(dateStr){
+  const detail = document.getElementById('calDayDetail');
+  const badge = document.getElementById('calSelDateBadge');
+  const list = document.getElementById('calDayList');
+  const emp = document.getElementById('calDayEmpty');
+  if(!detail||!badge||!list||!emp) return;
+
+  const d = new Date(dateStr+'T00:00:00');
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  badge.textContent = days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+  detail.style.display = 'block';
+  list.innerHTML = '';
+
+  const items = calGetItemsForDate(dateStr);
+  if(items.length === 0){ emp.style.display='block'; return; }
+  emp.style.display='none';
+
+  items.forEach(it=>{
+    const el = document.createElement('div');
+    el.className = 'item-swipe';
+    el.style.cursor='default';
+    const h=parseInt((it.time||'00:00').split(':')[0]);
+    const m=(it.time||'00:00').split(':')[1]||'00';
+    const per=h<12?'AM':'PM';
+    const h12=h%12||12;
+    el.innerHTML=`<div class="i-left"><div class="i-h">${String(h12).padStart(2,'0')}:${m}</div><div class="i-sub">${per}</div></div><div class="i-body"><div class="i-lbl">${esc(it.label)}</div></div>`;
+    list.appendChild(el);
+  });
+}
+
+// Render kalender saat navTo(4)
+const _origNavTo = navTo;
+navTo = function(p){
+  _origNavTo(p);
+  if(p===4) renderCal();
+};
 </script>
 
 <div id="ckbOverlay" class="ov" onclick="if(event.target===this)closeCKB()" style="align-items:flex-end;padding:0;">
@@ -3966,7 +4197,8 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     <div class="ios-modal-title">Detail Catatan</div>
     <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nama transaksi & metode pembayaran.</div>
     <div style="padding:0 16px 16px;">
-      <input type="text" id="tempMoneyName" class="ios-modal-input" onkeydown="if(event.key==='Enter') finishMoneyDetail()" placeholder="Contoh: Beli kuota..." autocomplete="off">
+<input type="text" id="tempMoneyName" class="ios-modal-input" onkeydown="if(event.key==='Enter') document.getElementById('tempMoneyDesc').focus()" placeholder="Contoh: Beli kuota..." autocomplete="off">
+      <input type="text" id="tempMoneyDesc" class="ios-modal-input" style="margin-top:10px;" onkeydown="if(event.key==='Enter') finishMoneyDetail()" placeholder="Deskripsi (opsional)..." autocomplete="off">
       <div class="ios-seg-ctrl" style="margin-top:12px;">
         <button class="ios-seg-btn on" id="btnMethCash" onclick="selMoneyMethod('cash')">💵 Cash</button>
         <button class="ios-seg-btn" id="btnMethCard" onclick="selMoneyMethod('card')">💳 Card</button>
@@ -3986,9 +4218,10 @@ function drawChart(canvasId, dataMap, existingChart, saveInstanceCb, colorPalett
     <div style="padding:0 16px 16px; display:flex; flex-direction:column; gap:10px;">
       <input type="number" id="editMoneyAmount" class="ios-modal-input" placeholder="Nominal" autocomplete="off">
       <input type="text" id="editMoneyName" class="ios-modal-input" placeholder="Nama Transaksi" autocomplete="off">
+      <input type="text" id="editMoneyDesc" class="ios-modal-input" placeholder="Deskripsi (opsional)" autocomplete="off">
       <div style="display:flex; gap:8px;">
         <input type="date" id="editMoneyDate" class="ios-modal-input" style="flex:1;">
-        <input type="time" id="editMoneyTime" class="ios-modal-input" style="width:90px;">
+        <div class="ios-time-pill" id="editMoneyTimePill" onclick="openMoneyTimePicker()" style="width:90px; height:42px; border-radius:8px; border:0.5px solid var(--sep2); display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="ios-time-pill-val" id="editMoneyTimeVal" style="font-size:14px;">--:--</span></div>
       </div>
     </div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
