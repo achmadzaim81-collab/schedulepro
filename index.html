@@ -1408,10 +1408,6 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   
   </div>
 
-<div id="calFabWrap">
-  <button class="fab" id="calFab" onclick="openAddModal('m')" title="Tambah jadwal bulanan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
-</div>
-
 <div class="page" id="pg3">
      <div class="page-sticky-hdr" id="stickyHdr3">
        <div class="sticky-bg" id="stickyBg3"></div>
@@ -1494,6 +1490,14 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
  <div id="moneyFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
     <button class="fab" onclick="startAddMoney()" title="Catat Keuangan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
+  </div>
+
+  <div id="calFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
+    <button class="fab" id="calFab" onclick="openAddModal('m')" title="Tambah jadwal bulanan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
+  </div>
+
+  <div id="calFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
+    <button class="fab" id="calFab" onclick="openAddModal('m')" title="Tambah jadwal bulanan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
   </div>
 
   <nav class="nav-bar" id="navBar">
@@ -2697,6 +2701,9 @@ function navTo(p){
   track.style.transform=`translate3d(${p*(-(100/PAGE_COUNT))}%,0,0)`;
   curPage=p;
   for(let i=0;i<PAGE_COUNT;i++){const n=document.getElementById(`nav${i}`);if(n)n.classList.toggle('on',i===p)}
+
+  const mFab = document.getElementById('moneyFabWrap');
+  if(mFab) mFab.style.display = (p === 3) ? 'block' : 'none';
 
   const cFab = document.getElementById('calFabWrap');
   if(cFab) cFab.style.display = (p === 2) ? 'block' : 'none';
