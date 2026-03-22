@@ -1373,7 +1373,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;">
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;max-width:500px;margin-left:auto;margin-right:auto;">
 
     <div style="text-align:center;font-size:11px;font-weight:700;color:var(--red);padding:6px 0;">Min</div>
 
@@ -1490,10 +1490,6 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
  <div id="moneyFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
     <button class="fab" onclick="startAddMoney()" title="Catat Keuangan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
-  </div>
-
-  <div id="calFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
-    <button class="fab" id="calFab" onclick="openAddModal('m')" title="Tambah jadwal bulanan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
   </div>
 
   <div id="calFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
@@ -3414,7 +3410,7 @@ const activeData = moneyData.filter(m => {
       <div class="m-item">
         <div class="m-item-l">
           <div class="m-item-t">${m.name || (m.type === 'in' ? 'Pendapatan' : 'Pengeluaran')}</div>
-          ${m.desc ? `<div style="font-size:11px;color:var(--t3);font-style:italic;margin-bottom:1px;">${m.desc}</div>` : ''}
+          ${m.keterangan ? `<div style="font-size:11px;color:var(--t3);font-style:italic;margin-bottom:1px;">${m.keterangan}</div>` : ''}
           <div class="m-item-d">${timeStr}</div>
         </div>
         <div class="m-item-r">
@@ -3532,6 +3528,7 @@ function selectMoneyType(type) {
   closeMoneyType();
 
   document.getElementById('tempMoneyName').value = '';
+  document.getElementById('tempMoneyDesc').value = '';
   selMoneyMethod('cash');
   document.getElementById('iosMoneyDetailModal').style.display = 'flex';
   setTimeout(() => document.getElementById('tempMoneyName').focus(), 100);
@@ -3562,12 +3559,32 @@ function finishMoneyDetail() {
 
 async function execSaveMoney(name, desc) {
   if(!curUser) return;
-  const newTrans = { id: Date.now(), user_id: curUser.id, type: tempMoneyType, amount: tempMoneyAmt, name: name, desc: desc||'', time: Date.now() };
-  moneyData.unshift(newTrans);
+  const tempId = Date.now();
+  const payload = { user_id: curUser.id, type: tempMoneyType, amount: tempMoneyAmt, name: name, keterangan: desc||'', time: Date.now() };
+  
+  // 1. TAMPILKAN DI LAYAR LANGSUNG (Tanpa Delay)
+  moneyData.unshift({ id: tempId, ...payload });
   renderMoney();
-  const {error} = await sb.from('money').insert(newTrans);
-  if(error) showToast('Gagal sinkron'); else showToast('Dicatat ✓');
-  haptic(20);
+  showToast('Menyimpan ke cloud... ⏳');
+  haptic(10);
+
+  // 2. UPLOAD DI BACKGROUND
+  const {data, error} = await sb.from('money').insert(payload).select();
+  
+  if(error) {
+    // Jika upload gagal, tarik kembali datanya dari layar
+    moneyData = moneyData.filter(m => m.id !== tempId);
+    renderMoney();
+    showToast('Gagal sinkron ⚠️');
+    alert("Detail Error: " + error.message);
+  } else {
+    // Jika sukses, timpa ID sementara dengan ID asli dari Cloud
+    const idx = moneyData.findIndex(m => m.id === tempId);
+    if(idx !== -1 && data && data.length > 0) {
+      moneyData[idx] = data[0];
+    }
+    showToast('Dicatat ✓');
+  }
 }
 
 
@@ -3608,7 +3625,7 @@ function editTransaction(id){
 
   document.getElementById('editMoneyAmount').value = tr.amount;
   document.getElementById('editMoneyName').value = tr.name;
-  document.getElementById('editMoneyDesc').value = tr.desc || '';
+  document.getElementById('editMoneyDesc').value = tr.keterangan || '';
 
   const d = new Date(tr.time);
   document.getElementById('editMoneyDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -3636,14 +3653,14 @@ async function saveEditMoney() {
 
   tr.amount = amt;
   tr.name = name;
-  tr.desc = desc;
+  tr.keterangan = desc;
   tr.time = newTime;
 
   closeEditMoney();
   renderMoney();
   showToast('Menyimpan perubahan...');
 
-  const {error} = await sb.from('money').update({amount: amt, name: name, desc: desc, time: newTime}).eq('id', editTransId);
+  const {error} = await sb.from('money').update({amount: amt, name: name, keterangan: desc, time: newTime}).eq('id', editTransId);
   if(error) showToast('Gagal sinkron'); else showToast('Diperbarui ✓');
   haptic(20);
 }
@@ -3674,6 +3691,7 @@ async function deleteTransaction(id){
   moneyData = moneyData.filter(m => m.id !== id);
   renderMoney(); 
   closeConfirmModal();
+  showToast('Menghapus dari cloud... ⏳');
 
   // Hapus permanen dari Supabase
   const {error} = await sb.from('money').delete().eq('id', id).eq('user_id', curUser.id);
@@ -3790,7 +3808,7 @@ async function saveBudgetFinal() {
   await sb.from('app_budgets').update({is_active: false}).eq('user_id', curUser.id).eq('is_active', true);
 
   // Simpan budget baru
-  const newB = { id: Date.now(), user_id: curUser.id, type: tempBudgetType, days: daysCount, start_time: start, end_time: end, amount: amt, is_active: true };
+  const newB = { user_id: curUser.id, type: tempBudgetType, days: daysCount, start_time: start, end_time: end, amount: amt, is_active: true };
   await sb.from('app_budgets').insert(newB);
 
   await loadMoney();
