@@ -79,6 +79,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   color: var(--t);
   background-color: var(--bg);
+  overscroll-behavior-y: none;
 }
 input, button, textarea, select {
   font-family: inherit;
@@ -600,7 +601,6 @@ input, button, textarea, select {
   background:var(--cd); border:0.5px solid var(--cd-b);
   border-radius:20px; box-shadow:var(--sh-card);
   cursor:pointer;
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
   transition:transform 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.18s;
 }
 .item-swipe:active { transform:scale(0.97); opacity:0.85; }
@@ -649,7 +649,26 @@ input, button, textarea, select {
 .mbc-actions button:active { transform:scale(0.85); background:var(--inp-f); }
 .mbc-actions button.destructive { color:var(--red); }
 
-.ios-list-group { background:var(--cd); border-radius:20px; overflow:hidden; border:0.5px solid var(--cd-b); box-shadow:var(--sh-card); margin-bottom:16px; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+.ios-mini-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: var(--green-bg);
+  color: var(--green);
+  border: 0.5px solid rgba(48,209,88,0.3);
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.ios-mini-add-btn:active {
+  transform: scale(0.92);
+  background: rgba(48,209,88,0.25);
+}
+
+.ios-list-group { background:var(--cd); border-radius:20px; overflow:hidden; border:0.5px solid var(--cd-b); box-shadow:var(--sh-card); margin-bottom:16px; }
 .ios-list-item { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:transparent; transition:background 0.15s; }
 .ios-list-item:active { background:var(--inp); }
 .ios-list-item:not(:last-child) { border-bottom:0.5px solid var(--sep); }
@@ -666,7 +685,7 @@ input, button, textarea, select {
    ══════════════════════════════════ */
 .stats-screen { position:fixed; inset:0; z-index:2500; display:flex; flex-direction:column; background:var(--bg); transform:translateY(100%); transition:transform .34s cubic-bezier(.32,0,.16,1); pointer-events:none; }
 .stats-screen.open { transform:translateY(0); pointer-events:all; }
-.stats-hdr { display:flex; align-items:center; justify-content:space-between; padding:max(14px,env(safe-area-inset-top)) 16px 12px; border-bottom:0.5px solid var(--sep); background:var(--bg-secondary); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); z-index:2; }
+.stats-hdr { display:flex; align-items:center; justify-content:space-between; padding:max(14px,env(safe-area-inset-top)) 16px 12px; border-bottom:0.5px solid var(--sep); background:var(--bg-secondary); z-index:2; }
 .stats-hdr-title { font-size:17px; font-weight:600; color:var(--t); }
 .stats-close { background:none; border:none; color:var(--accent); font-size:16px; font-weight:600; cursor:pointer; padding:4px 0; font-family:inherit; transition:opacity 0.15s; }
 .stats-close:active { opacity:0.6; }
@@ -1015,6 +1034,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 /* ══════════════════════════════════
    TOAST
    ══════════════════════════════════ */
+   #moTimePicker { z-index: 2500 !important; }
 #toast {
   position:fixed; bottom:calc(var(--nb-h) + 12px);
   left:50%; transform:translateX(-50%) translateY(20px) scale(0.9);
@@ -1433,7 +1453,8 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
 <div class="money-action-row">
   <button class="money-action-btn" onclick="openStatsModal()">📊 Statistik</button>
-  <button class="money-action-btn" onclick="openBudgetModal()">🎯 Atur Budget</button>
+  <button class="money-action-btn" onclick="openBudgetModal()">🎯 Budget</button>
+  <button class="money-action-btn" onclick="openNabungModal()">💰 Nabung</button>
 </div>
 
 <div class="money-balance-card">
@@ -1463,7 +1484,34 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   </div>
   <div style="text-align:right; font-size:11px; color:var(--t3); font-weight:500;" id="budgetTotalTxt">dari Rp 0</div>
 </div>
-     
+<div class="money-budget-card" id="nabungWrap" style="display:none;">
+  <div class="mbc-hdr">
+    <div class="mbc-title">💰 Target Nabung <span id="nNameLbl" style="font-size:10px; background:var(--accent-glass); color:var(--accent); padding:2px 6px; border-radius:6px; margin-left:6px; font-weight:800; text-transform:uppercase;">TARGET</span></div>
+    <div class="mbc-actions">
+      <button onclick="confirmFinishNabung()" title="Selesai">✓</button>
+      <button onclick="openEditNabungModal()" title="Edit">✏️</button>
+      <button class="destructive" onclick="confirmDeleteNabung()" title="Hapus">🗑</button>
+    </div>
+  </div>
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
+    <div style="font-size:13px; color:var(--t2); font-weight:500;">Terkumpul (Alokasi Tabungan)</div>
+    <div style="font-size:18px; font-weight:700; color:var(--accent);" id="nabungCurrentTxt">Rp 0</div>
+  </div>
+  
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="flex:1;">
+      <div style="height:8px; background:var(--inp); border-radius:4px; overflow:hidden; margin-bottom:6px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+        <div id="nabungFill" style="height:100%; width:0%; background:var(--accent); transition:width 0.5s cubic-bezier(0.4,0,0.2,1); border-radius:4px;"></div>
+      </div>
+      <div style="text-align:right; font-size:11px; color:var(--t3); font-weight:500;" id="nabungTotalTxt">dari Rp 0</div>
+    </div>
+    
+    <button class="ios-mini-add-btn" onclick="openAddNabungProgress()" title="Isi Tabungan">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Isi
+    </button>
+  </div>
+</div>
 <div class="sl" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
   <span>Riwayat Transaksi</span>
   <button id="btnClearMonth" onclick="confirmClearMonth()" style="display:none; background:transparent; border:none; color:var(--red); font-size:13px; cursor:pointer; font-weight:600; font-family:inherit;">Hapus Semua</button>
@@ -3458,6 +3506,7 @@ function setupRealtime() {
 let moneyData = [];
 let budgetsData = [];
 let activeBudget = null;
+let activeNabung = null;
 let tempBudgetType = 'bulan';
 
 async function loadMoney(){
@@ -3472,8 +3521,9 @@ async function loadMoney(){
   const {data: bData} = await sb.from('app_budgets').select('*').eq('user_id', curUser.id).order('start_time', {ascending: false});
   budgetsData = bData || [];
 
-  // Cek budget aktif
-  activeBudget = budgetsData.find(b => b.is_active === true);
+  // Cek budget aktif & nabung aktif
+  activeBudget = budgetsData.find(b => b.is_active === true && b.type !== 'nabung');
+  activeNabung = budgetsData.find(b => b.is_active === true && b.type === 'nabung');
 if(lbl) {
     if(activeBudget) {
         lbl.textContent = activeBudget.type === 'bulan' ? 'Budget Bulanan' : activeBudget.type === 'minggu' ? 'Budget Mingguan' : `Budget ${activeBudget.days} Hari`;
@@ -3591,7 +3641,42 @@ const activeData = moneyData.filter(m => {
       bw.style.display = 'none';
     }
   }
+const nw = document.getElementById('nabungWrap');
+  if(nw) {
+    if(activeNabung) {
+      nw.style.display = 'block';
+      
+      // Hitung jumlah yang sudah ditabung dari riwayat transaksi
+      let terkumpul = 0;
+      moneyData.forEach(m => {
+        // Cari pengeluaran yang namanya diawali "Nabung -" dan dibuat setelah target tabungan dibuat
+        if(m.type === 'out' && m.name && m.name.startsWith('Nabung -') && m.time >= activeNabung.start_time) {
+          terkumpul += m.amount;
+        }
+      });
+      
+      const nct = document.getElementById('nabungCurrentTxt'); 
+      if(nct) nct.textContent = formatRp(terkumpul);
+      
+      const ntt = document.getElementById('nabungTotalTxt'); 
+      if(ntt) ntt.textContent = `dari ${formatRp(activeNabung.amount)}`;
 
+      const nnl = document.getElementById('nNameLbl'); 
+      if(nnl) nnl.textContent = activeNabung.name || 'TABUNGAN';
+
+      const pct = Math.min(100, (terkumpul / activeNabung.amount) * 100);
+      const fill = document.getElementById('nabungFill');
+      if(fill) {
+        fill.style.width = pct + '%';
+        if(pct >= 100) fill.style.background = 'var(--green)';
+        else fill.style.background = 'var(--accent)';
+      }
+    } else {
+      nw.style.display = 'none';
+    }
+  }
+
+  if(emp) emp.style.display = activeData.length > 0 ? 'none' : 'block'; // Baris aslinya tetap ada di bawah
   if(emp) emp.style.display = activeData.length > 0 ? 'none' : 'block';
 
   // Render History Budget
@@ -3915,59 +4000,49 @@ async function saveBudgetFinal() {
   let duration = di ? parseInt(di.value) : 1;
   if(isNaN(duration) || duration <= 0) duration = 1;
 
-  let start = Date.now();
-  let end = start;
-  let d = new Date();
+  let start = Date.now(); let end = start; let d = new Date();
 
-  // Kalkulasi akurat untuk rentang waktu
   if(tempBudgetType === 'bulan'){
     start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
     end = new Date(d.getFullYear(), d.getMonth() + duration, 0, 23, 59, 59).getTime();
   } else if(tempBudgetType === 'minggu') {
-    let day = d.getDay() || 7;
-    d.setHours(0,0,0,0);
+    let day = d.getDay() || 7; d.setHours(0,0,0,0);
     start = d.getTime() - ((day - 1) * 86400000);
     end = start + (duration * 7 * 86400000) - 1;
   } else {
-    d.setHours(0,0,0,0);
-    start = d.getTime();
-    end = start + (duration * 86400000) - 1;
+    d.setHours(0,0,0,0); start = d.getTime(); end = start + (duration * 86400000) - 1;
   }
 
   closeBudgetAmount();
   if(!curUser) return;
 
+  showToast('Menyimpan budget... ⏳');
+
   if(activeBudget) {
-    activeBudget.amount = amt;
-    activeBudget.days = duration;
-    activeBudget.start_time = start;
-    activeBudget.end_time = end;
-    renderMoney(); 
-    showToast('Menyimpan perubahan... ⏳');
-    const {error} = await sb.from('app_budgets').update({amount: amt, days: duration, start_time: start, end_time: end}).eq('id', activeBudget.id);
-    if(error) alert('Supabase Error: ' + error.message);
-    else showToast('Budget diperbarui ✓');
+    activeBudget.amount = amt; activeBudget.days = duration; activeBudget.start_time = start; activeBudget.end_time = end;
+    renderMoney(); // Muncul instan
+    sb.from('app_budgets').update({amount: amt, days: duration, start_time: start, end_time: end}).eq('id', activeBudget.id)
+      .then(({error}) => { if(!error) showToast('Budget diperbarui ✓'); });
     return;
   }
 
-  showToast('Mengaktifkan budget... ⏳');
   const tempId = Date.now();
   const payload = { user_id: curUser.id, type: tempBudgetType, days: duration, start_time: start, end_time: end, amount: amt, is_active: true };
-  
   activeBudget = { id: tempId, ...payload };
-  renderMoney(); // Paksa render di layar
+  renderMoney(); // Muncul instan!
 
-  await sb.from('app_budgets').update({is_active: false}).eq('user_id', curUser.id).eq('is_active', true);
-  const {data, error} = await sb.from('app_budgets').insert(payload).select();
-  
-  if(error) {
-    alert('Peringatan: ' + error.message);
-    activeBudget = null; 
-    renderMoney();
-  } else {
-    activeBudget = (data && data.length > 0) ? data[0] : { id: tempId, ...payload };
-    showToast('Budget diaktifkan ✓');
-  }
+  // Background sync
+  Promise.all([
+    sb.from('app_budgets').update({is_active: false}).eq('user_id', curUser.id).eq('is_active', true),
+    sb.from('app_budgets').insert(payload).select()
+  ]).then(([{error: err1}, {data, error: err2}]) => {
+    if(err2) {
+      activeBudget = null; renderMoney(); showToast('Gagal simpan budget ⚠️');
+    } else {
+      activeBudget = (data && data.length > 0) ? data[0] : activeBudget;
+      showToast('Budget diaktifkan ✓');
+    }
+  });
   haptic([20, 20]);
 }
 
@@ -4165,8 +4240,8 @@ function renderStatsData() {
     document.getElementById('chartWrapIn').style.display = tIn > 0 ? 'block' : 'none';
 
     // Warna pastel elegan iOS
-    const colorOut = ['#ff453a', '#ff9f0a', '#ffd60a', '#ff375f', '#bf5af2', '#5e5ce6'];
-    const colorIn = ['#30d158', '#34c759', '#32ade6', '#0a84ff', '#00c7be'];
+    const colorOut = ['#ff453a', '#ff9f0a', '#bf5af2', '#ffd60a', '#ff375f', '#5e5ce6', '#ff8a65'];
+    const colorIn = ['#30d158', '#0a84ff', '#32ade6', '#00c7be', '#ffcc00', '#34c759'];
 
     drawChart('chartOut', mapOut, statsChartOut, (ci) => statsChartOut = ci, colorOut);
     drawChart('chartIn', mapIn, statsChartIn, (ci) => statsChartIn = ci, colorIn);
@@ -4353,6 +4428,166 @@ navTo = function(p){
   _origNavTo(p);
   if(p===2) renderCal();
 };
+// --- LOGIKA TABUNGAN (CLOUD SUPABASE) ---
+function openNabungModal() {
+  if(activeNabung) { showToast('Kamu masih punya target aktif!'); haptic(20); return; }
+  document.getElementById('nabungAmountInput').value = '';
+  document.getElementById('iosNabungAmountModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('nabungAmountInput').focus(), 100);
+  haptic(15);
+}
+
+function openEditNabungModal() {
+  if(!activeNabung) return;
+  document.getElementById('nabungAmountInput').value = activeNabung.amount;
+  document.getElementById('nabungNameInput').value = activeNabung.name || 'Tabungan';
+  if(activeNabung.end_time) {
+    const d = new Date(activeNabung.end_time);
+    document.getElementById('nabungDateInput').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  document.getElementById('iosNabungAmountModal').style.display = 'flex';
+  setTimeout(()=> document.getElementById('nabungAmountInput').focus(), 100);
+  haptic(15);
+}
+
+function nextNabungDetail() {
+  const amt = parseFloat(document.getElementById('nabungAmountInput').value);
+  if(!amt || amt <= 0) { showToast('Masukkan nominal valid'); haptic(20); return; }
+  document.getElementById('iosNabungAmountModal').style.display = 'none';
+  
+  if(!activeNabung) {
+    document.getElementById('nabungNameInput').value = '';
+    document.getElementById('nabungDateInput').value = '';
+  }
+  document.getElementById('iosNabungDetailModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('nabungNameInput').focus(), 100);
+  haptic(10);
+}
+
+function closeNabungModals() {
+  document.getElementById('iosNabungAmountModal').style.display = 'none';
+  document.getElementById('iosNabungDetailModal').style.display = 'none';
+}
+
+function saveNabungFinal() {
+  const amt = parseFloat(document.getElementById('nabungAmountInput').value);
+  const name = document.getElementById('nabungNameInput').value || 'Tabungan Baru';
+  const deadline = document.getElementById('nabungDateInput').value;
+  
+  if(!amt || amt <= 0) return;
+
+  // Set default deadline 1 tahun ke depan jika tidak diisi
+  let end_time = Date.now() + (365 * 86400000); 
+  if(deadline) {
+    end_time = new Date(deadline + 'T23:59:59').getTime();
+  }
+
+  closeNabungModals();
+  if(!curUser) return;
+  showToast('Menyimpan target... ⏳');
+
+  if(activeNabung) {
+     activeNabung.amount = amt; activeNabung.name = name; activeNabung.end_time = end_time;
+     renderMoney();
+     sb.from('app_budgets').update({amount: amt, name: name, end_time: end_time}).eq('id', activeNabung.id)
+      .then(({error}) => { if(!error) showToast('Target diperbarui ✓'); });
+     return;
+  }
+
+  const tempId = Date.now();
+  // Tambah days: 0 agar Supabase tidak nolak
+  const payload = { user_id: curUser.id, type: 'nabung', start_time: Date.now(), end_time: end_time, amount: amt, days: 0, name: name, is_active: true };
+  activeNabung = { id: tempId, ...payload };
+  renderMoney();
+
+  Promise.all([
+    sb.from('app_budgets').update({is_active: false}).eq('user_id', curUser.id).eq('type', 'nabung').eq('is_active', true),
+    sb.from('app_budgets').insert(payload).select()
+  ]).then(([{error: err1}, {data, error: err2}]) => {
+    if(err2) {
+      activeNabung = null; renderMoney(); showToast('Gagal simpan target ⚠️');
+      alert("Error Database: " + err2.message); // Popup error asli
+    } else {
+      activeNabung = (data && data.length > 0) ? data[0] : activeNabung;
+      showToast('Target '+ name +' disiapkan! ✓');
+    }
+  });
+  haptic([20, 20]);
+  renderMoney();
+
+  Promise.all([
+    sb.from('app_budgets').update({is_active: false}).eq('user_id', curUser.id).eq('type', 'nabung').eq('is_active', true),
+    sb.from('app_budgets').insert(payload).select()
+  ]).then(([{error: err1}, {data, error: err2}]) => {
+    if(err2) {
+      activeNabung = null; renderMoney(); showToast('Gagal simpan target ⚠️');
+    } else {
+      activeNabung = (data && data.length > 0) ? data[0] : activeNabung;
+      showToast('Target '+ name +' disiapkan! ✓');
+    }
+  });
+  haptic([20, 20]);
+}
+
+function confirmFinishNabung() { document.getElementById('iosFinishNabungModal').style.display = 'flex'; haptic(15); }
+async function execFinishNabung() {
+  document.getElementById('iosFinishNabungModal').style.display = 'none';
+  if(!activeNabung || !curUser) return;
+  await sb.from('app_budgets').update({is_active: false}).eq('id', activeNabung.id);
+  await loadMoney(); showToast('Tabungan Selesai ✓'); haptic(20);
+}
+
+function confirmDeleteNabung() { document.getElementById('iosDeleteNabungModal').style.display = 'flex'; haptic(15); }
+async function execDeleteNabung() {
+  document.getElementById('iosDeleteNabungModal').style.display = 'none';
+  if(!activeNabung || !curUser) return;
+  await sb.from('app_budgets').delete().eq('id', activeNabung.id);
+  await loadMoney(); showToast('Tabungan Dihapus 🗑️'); haptic(20);
+}
+function openAddNabungProgress() {
+  if(!activeNabung) return;
+  document.getElementById('nabungProgressInput').value = '';
+  document.getElementById('iosNabungProgressModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('nabungProgressInput').focus(), 100);
+  haptic(15);
+}
+
+async function saveNabungProgress() {
+  const amt = parseFloat(document.getElementById('nabungProgressInput').value);
+  if(!amt || amt <= 0) { showToast('Masukkan nominal valid'); haptic(20); return; }
+  
+  document.getElementById('iosNabungProgressModal').style.display = 'none';
+  if(!curUser || !activeNabung) return;
+  
+  // Otomatis catat sebagai pengeluaran dengan awalan "Nabung - "
+  const payload = { 
+      user_id: curUser.id, 
+      type: 'out', 
+      amount: amt, 
+      name: `Nabung - ${activeNabung.name || 'Target'}`, 
+      keterangan: 'Alokasi tabungan', 
+      time: Date.now() 
+  };
+  
+  const tempId = Date.now();
+  moneyData.unshift({ id: tempId, ...payload });
+  renderMoney(); // UI langsung terupdate secara instan!
+  showToast('Menyimpan tabungan... ⏳');
+  haptic(10);
+  
+  const {data, error} = await sb.from('money').insert(payload).select();
+  if(error) {
+      moneyData = moneyData.filter(m => m.id !== tempId);
+      renderMoney();
+      showToast('Gagal memotong saldo ⚠️');
+  } else {
+      const idx = moneyData.findIndex(m => m.id === tempId);
+      if(idx !== -1 && data && data.length > 0) {
+        moneyData[idx] = data[0];
+      }
+      showToast('Tabungan berhasil ditambahkan ✓');
+  }
+}
 </script>
 
 <div id="ckbOverlay" class="ov" onclick="if(event.target===this)closeCKB()" style="align-items:flex-end;padding:0;">
@@ -4589,6 +4824,68 @@ navTo = function(p){
       </div>
     </div>
     <div id="statsEmptyArea" class="stats-empty" style="display:none;">Belum ada data transaksi di bulan ini.</div>
+  </div>
+</div>
+<div id="iosNabungAmountModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Target Tabungan</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nominal target tabungan Anda.</div>
+    <div style="padding:0 16px 16px;">
+      <input type="number" id="nabungAmountInput" class="ios-modal-input" inputmode="numeric" placeholder="Contoh: 500000" onkeydown="if(event.key==='Enter') nextNabungDetail()">
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="closeNabungModals()">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="nextNabungDetail()">Lanjut</button>
+    </div>
+  </div>
+</div>
+
+<div id="iosNabungDetailModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Detail Tabungan</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Nama target dan tanggal deadline (opsional).</div>
+    <div style="padding:0 16px 16px; display:flex; flex-direction:column; gap:10px;">
+      <input type="text" id="nabungNameInput" class="ios-modal-input" placeholder="Nama target (misal: Beli HP Baru)">
+      <div style="text-align:left; font-size:12px; font-weight:600; color:var(--t2); margin-top:4px;">Deadline Tabungan:</div>
+      <input type="date" id="nabungDateInput" class="ios-modal-input">
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="closeNabungModals()">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="saveNabungFinal()">Simpan</button>
+    </div>
+  </div>
+</div>
+<div id="iosFinishNabungModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Selesaikan Tabungan?</div>
+    <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Target tabungan ini akan diakhiri.</div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosFinishNabungModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="execFinishNabung()">Selesai</button>
+    </div>
+  </div>
+</div>
+<div id="iosNabungProgressModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Isi Tabungan</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Nominal ini akan ditambahkan ke target dan memotong saldo utama Anda.</div>
+    <div style="padding:0 16px 16px;">
+      <input type="number" id="nabungProgressInput" class="ios-modal-input" inputmode="numeric" placeholder="Contoh: 10000" onkeydown="if(event.key==='Enter') saveNabungProgress()">
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="document.getElementById('iosNabungProgressModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="saveNabungProgress()">Simpan</button>
+    </div>
+  </div>
+</div>
+<div id="iosDeleteNabungModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Hapus Tabungan?</div>
+    <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Data target tabungan ini akan dihapus permanen.</div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosDeleteNabungModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn destructive" onclick="execDeleteNabung()">Hapus</button>
+    </div>
   </div>
 </div>
 </body>
