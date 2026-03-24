@@ -1467,15 +1467,17 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   <div><div class="hdr-s" id="moneyMonthLbl">Bulan Ini</div><div class="hdr-t">Keuangan</div></div>
 </div>
 
-<div class="money-action-row">
-  <button class="money-action-btn" onclick="openStatsModal()">📊 Statistik</button>
-  <button class="money-action-btn" onclick="openBudgetModal()">🎯 Budget</button>
-  <button class="money-action-btn" onclick="openNabungModal()">💰 Nabung</button>
+<div class="money-action-row" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+  <button class="money-action-btn" style="margin:0;" onclick="openStatsModal()">📊 Statistik</button>
+  <button class="money-action-btn" style="margin:0;" onclick="openBudgetModal()">🎯 Budget</button>
+  <button class="money-action-btn" style="margin:0;" onclick="openNabungModal()">💰 Nabung</button>
+  <button class="money-action-btn" style="margin:0;" onclick="openSimulasiModal()">🔮 Simulasi</button>
 </div>
 
 <div class="money-balance-card">
   <div class="mbc-lbl">Total Saldo</div>
   <div class="mbc-amt" id="moneyBal">Rp 0</div>
+  <div id="dailyLimitTxt" style="font-size:12px; color:var(--t2); margin:-6px auto 16px; font-weight:600; background:var(--inp); padding:6px 12px; border-radius:12px; display:inline-block;">Batas belanja harian: Rp 0</div>
   <div class="mbc-row">
     <div class="mbc-pill in">↓ <span id="moneyIn">Rp 0</span></div>
     <div class="mbc-pill out">↑ <span id="moneyOut">Rp 0</span></div>
@@ -1497,6 +1499,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
     <div id="budgetFill" style="height:100%; width:0%; background:var(--green); transition:width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.5s ease; border-radius:4px;"></div>
   </div>
   <div style="text-align:right; font-size:11px; color:var(--t3); font-weight:500;" id="budgetTotalTxt">dari Rp 0</div>
+  <div id="budgetProjTxt" style="font-size:12px; color:var(--t2); margin-top:12px; text-align:center; padding-top:12px; border-top:0.5px solid var(--sep2); line-height:1.4;"></div>
 </div>
 <div class="money-budget-card" id="nabungWrap" style="display:none;">
   <div class="mbc-hdr">
@@ -1524,6 +1527,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
     </button>
   </div>
 </div>
+
 <div class="sl" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
   <span>Riwayat Transaksi</span>
   <button id="btnClearMonth" onclick="confirmClearMonth()" style="display:none; background:transparent; border:none; color:var(--red); font-size:13px; cursor:pointer; font-weight:600; font-family:inherit;">Hapus Semua</button>
@@ -3705,8 +3709,52 @@ const nw = document.getElementById('nabungWrap');
       nw.style.display = 'none';
     }
   }
+// 1. Simpan Status Global untuk Simulasi
+  const _now = new Date();
+  let _avgGlobal = tOut / _now.getDate();
+  let _avgBudget = 0;
+  if(activeBudget) {
+      const _daysB = Math.max(1, Math.ceil((Date.now() - activeBudget.start_time) / 86400000));
+      _avgBudget = budgetOut / _daysB;
+  }
+  window.currentMoneyStats = { 
+      bal: (tIn - tOut), origBal: tIn, 
+      budget: activeBudget ? (activeBudget.amount - budgetOut) : null, origBudget: activeBudget ? activeBudget.amount : null,
+      avgOut: activeBudget ? _avgBudget : _avgGlobal 
+  };
 
-  if(emp) emp.style.display = activeData.length > 0 ? 'none' : 'block'; // Baris aslinya tetap ada di bawah
+  // 2. Hitung Batas Belanja Harian Otomatis
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1);
+  let dailyLimit = Math.max(0, (tIn - tOut) / daysLeft);
+  
+  if(activeBudget) {
+      const bEnd = new Date(activeBudget.end_time);
+      const bDaysLeft = Math.max(1, Math.ceil((bEnd.getTime() - Date.now()) / 86400000));
+      const bSisa = activeBudget.amount - budgetOut;
+      dailyLimit = Math.max(0, bSisa / bDaysLeft);
+      
+      // 3. Proyeksi Kapan Budget Habis
+      const bpt = document.getElementById('budgetProjTxt');
+      if(bpt) {
+          const daysElapsed = Math.max(1, Math.ceil((Date.now() - activeBudget.start_time) / 86400000));
+          const avgPerDay = budgetOut / daysElapsed;
+          if(budgetOut >= activeBudget.amount) {
+              bpt.innerHTML = '<span style="color:var(--red); font-weight:700;">⚠️ Budget sudah habis!</span>';
+          } else if(avgPerDay > 0) {
+              const daysLeftEst = Math.floor((activeBudget.amount - budgetOut) / avgPerDay);
+              const estDate = new Date(Date.now() + (daysLeftEst * 86400000));
+              const estDateStr = estDate.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+              bpt.innerHTML = `Avg. Pengeluaran: <b>${formatRp(avgPerDay)}</b>/hari.<br>Estimasi habis: <b>${daysLeftEst} hari lagi</b> (${estDateStr})`;
+          } else {
+              bpt.innerHTML = 'Belum ada pengeluaran untuk diestimasi.';
+          }
+      }
+  }
+  const dlTxt = document.getElementById('dailyLimitTxt');
+  if(dlTxt) dlTxt.textContent = `Batas belanja harian: ${formatRp(dailyLimit)}`;
+
   if(emp) emp.style.display = activeData.length > 0 ? 'none' : 'block';
 
   // Render History Budget
@@ -4161,22 +4209,35 @@ function closeConfirmModal(){
 
 async function deleteTransaction(id){
   if(!curUser) return;
-
-  // Langsung hapus di layar biar mulus
+  
+  // Hapus dari layar secara instan (0 delay)
   moneyData = moneyData.filter(m => m.id !== id);
+  localStorage.setItem('sch_cache_money', JSON.stringify(moneyData)); 
   renderMoney(); 
   closeConfirmModal();
-  showToast('Menghapus dari cloud... ⏳');
+  
+  // Eksekusi hapus di database secara rahasia
+  sb.from('money').delete().eq('id', id).eq('user_id', curUser.id).then(({error}) => {
+      if(!error) showToast('Transaksi dihapus ✓');
+  });
+  haptic(20);
+}
 
-  // Hapus permanen dari Supabase
-  const {error} = await sb.from('money').delete().eq('id', id).eq('user_id', curUser.id);
-
-  if(error) {
-    showToast('Gagal menghapus di cloud ⚠️');
-  } else {
-    showToast('Transaksi dihapus ✓');
-  }
-  haptic([50, 15, 40]);
+async function execDeleteBudget() {
+  document.getElementById('iosDeleteBudgetModal').style.display = 'none';
+  if(!activeBudget || !curUser) return;
+  
+  const delId = activeBudget.id;
+  activeBudget = null;
+  
+  // Hapus dari layar seketika
+  budgetsData = budgetsData.filter(b => b.id !== delId);
+  localStorage.setItem('sch_cache_budgets', JSON.stringify(budgetsData));
+  renderMoney();
+  
+  // Hapus di cloud secara asinkronus
+  sb.from('app_budgets').delete().eq('id', delId).then(() => showToast('Budget dihapus 🗑️'));
+  haptic(20);
 }
 // Panggil render saat pertama kali dimuat
 document.addEventListener('DOMContentLoaded', renderMoney);
@@ -4336,11 +4397,13 @@ function confirmDeleteHistory(id) {
 async function execDeleteHistory() {
   document.getElementById('iosDeleteHistoryModal').style.display = 'none';
   if(!historyDelId || !curUser) return;
-  await sb.from('app_budgets').delete().eq('id', historyDelId);
-  await loadMoney();
-  showToast('Riwayat dihapus 🗑️');
-  haptic(20);
+  const delId = historyDelId;
   historyDelId = null;
+  budgetsData = budgetsData.filter(b => b.id !== delId);
+  localStorage.setItem('sch_cache_budgets', JSON.stringify(budgetsData));
+  renderMoney();
+  sb.from('app_budgets').delete().eq('id', delId).then(() => showToast('Riwayat dihapus 🗑️'));
+  haptic(20);
 }
 function confirmClearMonth() {
   document.getElementById('iosClearMonthModal').style.display = 'flex';
@@ -4797,8 +4860,13 @@ function confirmDeleteNabung() { document.getElementById('iosDeleteNabungModal')
 async function execDeleteNabung() {
   document.getElementById('iosDeleteNabungModal').style.display = 'none';
   if(!activeNabung || !curUser) return;
-  await sb.from('app_budgets').delete().eq('id', activeNabung.id);
-  await loadMoney(); showToast('Tabungan Dihapus 🗑️'); haptic(20);
+  const delId = activeNabung.id;
+  activeNabung = null;
+  budgetsData = budgetsData.filter(b => b.id !== delId);
+  localStorage.setItem('sch_cache_budgets', JSON.stringify(budgetsData));
+  renderMoney();
+  sb.from('app_budgets').delete().eq('id', delId).then(() => showToast('Tabungan Dihapus 🗑️'));
+  haptic(20);
 }
 function openAddNabungProgress() {
   if(!activeNabung) return;
@@ -4865,6 +4933,122 @@ async function saveNabungProgress() {
     else confirmDeleteNabung();
   };
   haptic(15);
+}
+ // --- FITUR SIMULASI CANGGIH ---
+function openSimulasiModal() {
+  const wrap = document.getElementById('simulasiInputsWrap');
+  wrap.innerHTML = ''; 
+  document.getElementById('simulasiResult').style.display = 'none';
+  document.getElementById('simDailyTargetInput').value = '';
+  
+  const stats = window.currentMoneyStats;
+  if(stats) {
+      const now = new Date();
+      const daysLeft = Math.max(1, new Date(now.getFullYear(), now.getMonth()+1, 0).getDate() - now.getDate() + 1);
+      const limit = Math.max(0, (stats.budget !== null ? stats.budget : stats.bal)) / daysLeft;
+      document.getElementById('simDailySaran').textContent = `Saran target harian: ${formatRp(limit)}`;
+  }
+
+  document.getElementById('iosSimulasiModal').style.display = 'flex';
+  addSimulasiInput();
+}
+
+function addSimulasiInput() {
+  const wrap = document.getElementById('simulasiInputsWrap');
+  const count = wrap.children.length + 1;
+  
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; align-items:center; gap:8px; animation:slideFadeIn 0.2s ease;';
+  row.className = 'sim-row';
+
+  const inp = document.createElement('input');
+  inp.type = 'number';
+  inp.className = 'ios-modal-input sim-inp';
+  inp.inputMode = 'numeric';
+  inp.placeholder = `Nominal pengeluaran ${count}`;
+  inp.oninput = execSimulasi;
+  inp.onkeydown = (e) => { if(e.key==='Enter') { e.preventDefault(); addSimulasiInput(); } };
+
+  const delBtn = document.createElement('button');
+  delBtn.innerHTML = '✕';
+  delBtn.style.cssText = 'background:transparent; border:none; color:var(--t3); font-size:18px; cursor:pointer; padding:0 8px; font-weight:700; transition:0.2s;';
+  delBtn.onclick = () => { row.remove(); execSimulasi(); haptic(10); };
+
+  row.appendChild(inp);
+  row.appendChild(delBtn);
+  wrap.appendChild(row);
+
+  setTimeout(() => inp.focus(), 50);
+  haptic(10);
+}
+
+function execSimulasi() {
+  const inputs = document.querySelectorAll('.sim-inp');
+  let totalAmt = 0;
+
+  inputs.forEach(inp => {
+     const v = parseFloat(inp.value);
+     if(v && !isNaN(v)) { totalAmt += v; }
+  });
+
+  const res = document.getElementById('simulasiResult');
+  if(totalAmt <= 0) { res.style.display='none'; return; }
+
+  const stats = window.currentMoneyStats;
+  let sisaSaldo = stats.bal - totalAmt;
+  let html = `<div style="margin-top:16px; padding:12px; background:var(--bg-secondary); border-radius:12px; border:0.5px solid var(--sep);">`;
+  html += `<div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:0.5px solid var(--sep); padding-bottom:8px; margin-bottom:8px;">`;
+  html += `<div style="font-size:12px; color:var(--t2);">Total Simulasi:</div>`;
+  html += `<div style="font-size:16px; font-weight:700; color:var(--accent);">${formatRp(totalAmt)}</div></div>`;
+  
+  let targetSisa = 0; let targetOrig = 0; let label = "";
+
+  if(stats.budget !== null) {
+      targetSisa = stats.budget - totalAmt; targetOrig = stats.origBudget || stats.budget; label = "Budget";
+  } else {
+      targetSisa = sisaSaldo; targetOrig = stats.origBal || stats.bal; label = "Saldo";
+  }
+
+  let pct = targetOrig > 0 ? (targetSisa / targetOrig) * 100 : 0;
+  let statusColor, statusText;
+
+  if(targetSisa < 0) {
+      statusColor = 'var(--red)'; statusText = '🚨 Berbahaya (Defisit)';
+  } else if(pct <= 20) {
+      statusColor = '#ff9f0a'; statusText = '⚠️ Kritis (Mendekati Batas)';
+  } else if(pct <= 50) {
+      statusColor = '#ffd60a'; statusText = '🟡 Waspada (< 50%)';
+  } else {
+      statusColor = 'var(--green)'; statusText = '✅ Sangat Aman';
+  }
+
+  html += `<div><div style="font-size:12px; color:var(--t2);">Sisa ${label} Nanti:</div>`;
+  html += `<div style="font-size:22px; font-weight:800; color:${statusColor}">${formatRp(targetSisa)}</div></div>`;
+  html += `<div style="font-size:12px; color:${statusColor}; margin-top:4px; font-weight:700;">${statusText}</div>`;
+
+  const targetInp = document.getElementById('simDailyTargetInput');
+  const customDailyTarget = targetInp ? parseFloat(targetInp.value) : 0;
+
+  if(targetSisa > 0) {
+      if (customDailyTarget > 0) {
+         let estDays = Math.floor(targetSisa / customDailyTarget);
+         html += `<div style="font-size:11px; color:var(--t3); margin-top:10px; padding-top:10px; border-top:0.5px dotted var(--sep2); line-height:1.4;">`;
+         html += `Dengan target pengeluaran <b>${formatRp(customDailyTarget)}/hari</b>, sisa dana diproyeksikan cukup untuk <b>${estDays} hari</b> lagi.`;
+         html += `</div>`;
+      } else {
+         html += `<div style="font-size:11px; color:var(--t3); margin-top:10px; padding-top:10px; border-top:0.5px dotted var(--sep2);">Isi Target Pengeluaran Harian di atas untuk melihat proyeksi sisa hari.</div>`;
+      }
+  }
+  
+  const now = new Date();
+  const daysLeft = Math.max(1, new Date(now.getFullYear(), now.getMonth()+1, 0).getDate() - now.getDate() + 1);
+  const saranLimit = Math.max(0, targetSisa / daysLeft);
+  const saranEl = document.getElementById('simDailySaran');
+  if(saranEl) saranEl.textContent = targetSisa > 0 ? `Saran target harian: ${formatRp(saranLimit)}` : 'Sisa dana habis.';
+
+  html += `</div>`;
+  res.innerHTML = html;
+  res.style.display = 'block';
 }
 </script>
 
@@ -5239,6 +5423,27 @@ async function saveNabungProgress() {
     </div>
   </div>
 </div>
+  </div>
+</div>
+<div id="iosSimulasiModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel" style="max-width:320px;">
+    <div class="ios-modal-title">Simulasi Pengeluaran</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Ketik nominal lalu tekan <b>Enter</b> untuk menambah baris simulasi.</div>
+    <div style="padding:0 16px 16px;">
+      <div id="simulasiInputsWrap" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <button onclick="addSimulasiInput()" style="margin-top:10px; width:100%; background:var(--accent-glass); color:var(--accent); border:none; padding:8px; border-radius:10px; font-weight:700; cursor:pointer;">+ Tambah Item</button>
+      
+      <div style="margin-top:16px; border-top:0.5px solid var(--sep); padding-top:12px; text-align:left;">
+         <div style="font-size:12px; color:var(--t2); margin-bottom:6px;">Target Pengeluaran Harian:</div>
+         <input type="number" id="simDailyTargetInput" class="ios-modal-input" inputmode="numeric" placeholder="Contoh: 50000" oninput="execSimulasi()">
+         <div id="simDailySaran" style="font-size:11px; color:var(--accent); margin-top:6px; font-weight:600;"></div>
+      </div>
+      
+      <div id="simulasiResult" style="display:none; text-align:left;"></div>
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep); display:block;">
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="document.getElementById('iosSimulasiModal').style.display='none'">Tutup Simulasi</button>
+    </div>
   </div>
 </div>
 </body>
