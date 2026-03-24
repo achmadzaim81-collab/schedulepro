@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -803,6 +804,21 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 .ios-as-item.cancel:active { background:var(--inp); }
 .ios-as-sep { display:none; }
 
+/* CSS Mode Edit Label */
+.ios-as-item-content { display:flex; align-items:center; justify-content:space-between; width:100%; }
+.ios-as-item-text { flex:1; text-align:center; transition:0.2s; }
+.ios-as-item.edit-mode .ios-as-item-text { text-align:left; padding-left:8px; }
+.lbl-edit-actions { display:none; gap:10px; }
+.ios-as-item.edit-mode .lbl-edit-actions { display:flex; animation:fIn 0.2s ease; }
+.lbl-btn { background:var(--bg-secondary); border:0.5px solid var(--sep); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.15s; font-size:16px; }
+.lbl-btn:active { transform:scale(0.85); background:var(--inp); }
+.lbl-btn.del { color:var(--red); }
+.lbl-btn.edit { color:var(--accent); }
+
+/* CSS untuk hilangkan scrollbar putih bawaan sistem */
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Custom Modal */
 .ios-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; z-index:2100; background:rgba(0,0,0,0.4); backdrop-filter:blur(5px); animation:fIn 0.2s; display:flex; align-items:center; justify-content:center; padding:20px; }
 .ios-modal { width:100%; max-width:280px; border-radius:18px; text-align:center; padding:0; overflow:hidden; border:0.5px solid var(--sep); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); }
@@ -1470,9 +1486,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   <div class="mbc-hdr">
     <div class="mbc-title">🎯 Budget <span id="bPeriodLbl" style="font-size:10px; background:var(--accent-glass); color:var(--accent); padding:2px 6px; border-radius:6px; margin-left:6px; font-weight:800; text-transform:uppercase;">BULANAN</span></div>
     <div class="mbc-actions">
-      <button onclick="confirmFinishBudget()" title="Selesai">✓</button>
-      <button onclick="openEditBudgetModal()" title="Edit">✏️</button>
-      <button class="destructive" onclick="confirmDeleteBudget()" title="Hapus">🗑</button>
+      <button class="m-dots" onclick="openTargetMenu('budget')" style="font-size:24px; padding-bottom:10px;">···</button>
     </div>
   </div>
   <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
@@ -1488,9 +1502,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   <div class="mbc-hdr">
     <div class="mbc-title">💰 Target Nabung <span id="nNameLbl" style="font-size:10px; background:var(--accent-glass); color:var(--accent); padding:2px 6px; border-radius:6px; margin-left:6px; font-weight:800; text-transform:uppercase;">TARGET</span></div>
     <div class="mbc-actions">
-      <button onclick="confirmFinishNabung()" title="Selesai">✓</button>
-      <button onclick="openEditNabungModal()" title="Edit">✏️</button>
-      <button class="destructive" onclick="confirmDeleteNabung()" title="Hapus">🗑</button>
+      <button class="m-dots" onclick="openTargetMenu('nabung')" style="font-size:24px; padding-bottom:10px;">···</button>
     </div>
   </div>
   <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px;">
@@ -3517,9 +3529,23 @@ async function loadMoney(){
   const lbl = document.getElementById('moneyMonthLbl');
   if(lbl) lbl.textContent = `${months[d.getMonth()]} ${d.getFullYear()}`;
 
+  // [UI INSTAN] Tampilkan dari cache lokal langsung tanpa delay loading
+  const cacheB = localStorage.getItem('sch_cache_budgets');
+  const cacheM = localStorage.getItem('sch_cache_money');
+  if(cacheB && cacheM && moneyData.length === 0) {
+    try {
+      budgetsData = JSON.parse(cacheB);
+      moneyData = JSON.parse(cacheM);
+      activeBudget = budgetsData.find(b => b.is_active === true && b.type !== 'nabung');
+      activeNabung = budgetsData.find(b => b.is_active === true && b.type === 'nabung');
+      renderMoney();
+    } catch(e){}
+  }
+
   // Load semua budget dari database baru
   const {data: bData} = await sb.from('app_budgets').select('*').eq('user_id', curUser.id).order('start_time', {ascending: false});
   budgetsData = bData || [];
+  localStorage.setItem('sch_cache_budgets', JSON.stringify(budgetsData));
 
   // Cek budget aktif & nabung aktif
   activeBudget = budgetsData.find(b => b.is_active === true && b.type !== 'nabung');
@@ -3542,6 +3568,7 @@ if(lbl) {
   const {data, error} = await sb.from('money').select('*').eq('user_id', curUser.id).order('time', {ascending: false});
   if(!error && data) {
     moneyData = data;
+    localStorage.setItem('sch_cache_money', JSON.stringify(moneyData));
     renderMoney();
   }
 }
@@ -3595,8 +3622,11 @@ const activeData = moneyData.filter(m => {
       <div class="ios-list-item">
         <div class="ili-l">
           <div class="ili-t">${m.name || (m.type === 'in' ? 'Pendapatan' : 'Pengeluaran')}</div>
+          <div style="font-size:10px; margin-top:3px; margin-bottom:1px;">
+            ${m.label ? `<span style="background:var(--accent-glass); color:var(--accent); padding:2px 6px; border-radius:4px; font-weight:700;">🏷️ ${m.label}</span>` : `<span style="background:var(--red-bg); color:var(--red); padding:2px 6px; border-radius:4px; font-weight:700;">⚠️ EDIT & TAMBAHKAN LABEL</span>`}
+          </div>
           ${m.keterangan ? `<div style="font-size:12px;color:var(--t3);font-style:italic;">${m.keterangan}</div>` : ''}
-          <div class="ili-d">${timeStr}</div>
+          <div class="ili-d" style="margin-top:2px;">${timeStr}</div>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
           <div class="ili-a" style="color:var(--${m.type === 'in' ? 'green' : 'red'})">
@@ -3713,6 +3743,199 @@ const nw = document.getElementById('nabungWrap');
 let tempMoneyAmt = 0;
 let tempMoneyType = '';
 let tempMoneyMethod = 'cash'; // 'cash' or 'card'
+const labelsIn = ['Gaji', 'Bonus', 'Investasi', 'Pencairan Tabungan', 'Hadiah', 'Lainnya'];
+const labelsOut = ['Transportasi', 'Makanan & Minuman', 'Belanja', 'Hiburan', 'Tagihan & Utang', 'Kesehatan', 'Edukasi', 'Lainnya'];
+
+let activeLabelMode = 'add'; 
+let selectedLabelValue = '';
+let isLabelEditMode = false;
+
+function toggleLabelEditMode() {
+  isLabelEditMode = !isLabelEditMode;
+  const btn = document.getElementById('lblEditToggleBtn');
+  if(btn) btn.textContent = isLabelEditMode ? 'Selesai' : 'Edit';
+  
+  const items = document.querySelectorAll('#labelSheetOptions .ios-as-item');
+  items.forEach(item => {
+    if(item.id !== 'btnCustomLabel' && item.dataset.isLainnya !== 'true') {
+      item.classList.toggle('edit-mode', isLabelEditMode);
+    }
+  });
+  haptic(10);
+}
+
+function openLabelSheet(mode) {
+  activeLabelMode = mode;
+  isLabelEditMode = false;
+  const overlay = document.getElementById('labelSheetOverlay');
+  const optionsWrap = document.getElementById('labelSheetOptions');
+  if(!overlay || !optionsWrap) return;
+
+  const titleHtml = `
+    <div class="ios-as-title" style="position: sticky; top: 0; background: var(--cd); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 10; display:flex; justify-content:space-between; align-items:center; padding: 12px 16px;">
+      <span style="flex:1; text-align:center; padding-left:34px;">Pilih Label / Kategori</span>
+      <button id="lblEditToggleBtn" onclick="toggleLabelEditMode()" style="background:transparent; border:none; color:var(--accent); font-weight:600; font-size:14px; cursor:pointer; width:34px; text-align:right; font-family:inherit;">Edit</button>
+    </div>
+  `;
+  optionsWrap.innerHTML = titleHtml;
+  overlay.style.display = 'flex';
+  haptic(15);
+  
+  const type = mode === 'add' ? tempMoneyType : currentEditingType;
+  // Ambil label yang disembunyikan/dihapus pengguna dari LocalStorage
+  let hiddenLabels = [];
+  try { hiddenLabels = JSON.parse(localStorage.getItem('sch_hidden_labels')) || []; } catch(e){}
+
+  const arr = (type === 'in' ? labelsIn : labelsOut).filter(l => !hiddenLabels.includes(l));
+  const dbLabels = [...new Set(moneyData.filter(m => m.type === type && m.label).map(m => m.label))];
+  const combined = [...new Set([...arr, ...dbLabels])];
+  combined.sort();
+
+  combined.forEach(l => {
+    if(l === 'Lainnya') return; // Lewati 'Lainnya', kita buat statis di bawah
+    const btn = document.createElement('button');
+    btn.className = 'ios-as-item';
+    btn.innerHTML = `
+      <div class="ios-as-item-content">
+        <span class="ios-as-item-text">${l}</span>
+        <div class="lbl-edit-actions">
+          <div class="lbl-btn edit" onclick="editGlobalLabel(event, '${l}', '${type}')">✏️</div>
+          <div class="lbl-btn del" onclick="deleteGlobalLabel(event, '${l}', '${type}')">✕</div>
+        </div>
+      </div>
+    `;
+    btn.onclick = (e) => { if(!isLabelEditMode) selectLabelFromSheet(l, false); };
+    optionsWrap.appendChild(btn);
+  });
+
+  // Tambahkan 'Lainnya' yang tidak bisa dihapus
+  const btnLainnya = document.createElement('button');
+  btnLainnya.className = 'ios-as-item';
+  btnLainnya.dataset.isLainnya = 'true';
+  btnLainnya.innerHTML = `<div class="ios-as-item-content"><span class="ios-as-item-text">Lainnya</span></div>`;
+  btnLainnya.onclick = () => { if(!isLabelEditMode) selectLabelFromSheet('Lainnya', false); };
+  optionsWrap.appendChild(btnLainnya);
+
+  // Tombol Custom Baru
+  const btnCustom = document.createElement('button');
+  btnCustom.className = 'ios-as-item';
+  btnCustom.id = 'btnCustomLabel';
+  btnCustom.innerHTML = `<div class="ios-as-item-content"><span class="ios-as-item-text">Custom Label...</span></div>`;
+  btnCustom.onclick = () => { if(!isLabelEditMode) selectLabelFromSheet('', true); };
+  optionsWrap.appendChild(btnCustom);
+}
+
+let targetEditLabel = { oldLabel: '', type: '' };
+let targetDeleteLabel = { oldLabel: '', type: '' };
+
+function editGlobalLabel(e, oldLabel, type) {
+  e.stopPropagation();
+  targetEditLabel = { oldLabel, type };
+  const inp = document.getElementById('editLabelNameInput');
+  if(inp) inp.value = oldLabel;
+  
+  // Sembunyikan popup daftar label agar tidak menutupi form edit
+  document.getElementById('labelSheetOverlay').style.display = 'none';
+  document.getElementById('iosEditLabelModal').style.display = 'flex';
+  setTimeout(() => { if(inp) inp.focus(); }, 100);
+  haptic(15);
+}
+
+async function execEditGlobalLabel() {
+  const inp = document.getElementById('editLabelNameInput');
+  const newLabel = inp ? inp.value.trim() : '';
+  const { oldLabel, type } = targetEditLabel;
+  
+  if(!newLabel || newLabel === oldLabel) {
+    document.getElementById('iosEditLabelModal').style.display = 'none';
+    return;
+  }
+  
+  document.getElementById('iosEditLabelModal').style.display = 'none';
+  showToast('Menyimpan perubahan... ⏳');
+  
+  moneyData.forEach(m => { if(m.type === type && m.label === oldLabel) m.label = newLabel; });
+  renderMoney();
+  
+  if(curUser) { await sb.from('money').update({label: newLabel}).eq('user_id', curUser.id).eq('type', type).eq('label', oldLabel); }
+  
+  let hidden = []; try { hidden = JSON.parse(localStorage.getItem('sch_hidden_labels')) || []; } catch(e){}
+  if(!hidden.includes(oldLabel)) { hidden.push(oldLabel); localStorage.setItem('sch_hidden_labels', JSON.stringify(hidden)); }
+  
+  openLabelSheet(activeLabelMode);
+  if(isLabelEditMode) toggleLabelEditMode(); 
+  showToast('Label diubah ✓'); haptic(20);
+}
+
+function deleteGlobalLabel(e, oldLabel, type) {
+  e.stopPropagation();
+  targetDeleteLabel = { oldLabel, type };
+  const desc = document.getElementById('iosDeleteLabelDesc');
+  if(desc) desc.textContent = `Hapus label "${oldLabel}"? Semua transaksi terkait akan dipindah ke label "Lainnya".`;
+  
+  // Sembunyikan popup daftar label
+  document.getElementById('labelSheetOverlay').style.display = 'none';
+  const modal = document.getElementById('iosDeleteLabelModal');
+  if(modal) modal.style.display = 'flex';
+  haptic(15);
+}
+
+async function execDeleteGlobalLabel() {
+  document.getElementById('iosDeleteLabelModal').style.display = 'none';
+  const { oldLabel, type } = targetDeleteLabel;
+  
+  showToast('Menghapus label... ⏳');
+  moneyData.forEach(m => { if(m.type === type && m.label === oldLabel) m.label = 'Lainnya'; });
+  renderMoney();
+  
+  if(curUser) { await sb.from('money').update({label: 'Lainnya'}).eq('user_id', curUser.id).eq('type', type).eq('label', oldLabel); }
+  
+  let hidden = []; try { hidden = JSON.parse(localStorage.getItem('sch_hidden_labels')) || []; } catch(e){}
+  if(!hidden.includes(oldLabel)) { hidden.push(oldLabel); localStorage.setItem('sch_hidden_labels', JSON.stringify(hidden)); }
+  
+  openLabelSheet(activeLabelMode);
+  if(isLabelEditMode) toggleLabelEditMode();
+  showToast('Label dihapus ✓'); haptic(20);
+}
+
+function selectLabelFromSheet(label, isCustom) {
+  document.getElementById('labelSheetOverlay').style.display = 'none';
+  
+  if(!isCustom) {
+    selectedLabelValue = label;
+    const trigger = document.getElementById(activeLabelMode === 'add' ? 'tempMoneyLabelTrigger' : 'editMoneyLabelTrigger');
+    if(trigger) trigger.value = label; 
+  } else {
+    // Munculkan Modal Custom Label
+    const inp = document.getElementById('customLabelInput');
+    if(inp) inp.value = '';
+    document.getElementById('iosCustomLabelModal').style.display = 'flex';
+    setTimeout(() => { if(inp) inp.focus(); }, 100);
+  }
+  haptic(10);
+}
+
+function execCustomLabel() {
+  const inp = document.getElementById('customLabelInput');
+  const newLabel = inp ? inp.value.trim() : '';
+  if(!newLabel) return;
+
+  selectedLabelValue = newLabel;
+  const trigger = document.getElementById(activeLabelMode === 'add' ? 'tempMoneyLabelTrigger' : 'editMoneyLabelTrigger');
+  if(trigger) trigger.value = newLabel;
+  
+  document.getElementById('iosCustomLabelModal').style.display = 'none';
+  haptic(15);
+}
+
+function closeLabelSheet() {
+  document.getElementById('labelSheetOverlay').style.display = 'none';
+  haptic(5);
+}
+function closeLabelSheet() {
+  document.getElementById('labelSheetOverlay').style.display = 'none';
+  haptic(5);
+}
 
 function startAddMoney() {
   document.getElementById('tempMoneyAmount').value = '';
@@ -3749,11 +3972,14 @@ function selectMoneyType(type) {
 
   document.getElementById('tempMoneyName').value = '';
   document.getElementById('tempMoneyDesc').value = '';
+  document.getElementById('tempMoneyLabelTrigger').value = ''; // Reset Trigger
+  
   selMoneyMethod('cash');
   document.getElementById('iosMoneyDetailModal').style.display = 'flex';
   setTimeout(() => document.getElementById('tempMoneyName').focus(), 100);
   haptic(10);
 }
+
 function closeMoneyDetail() { document.getElementById('iosMoneyDetailModal').style.display = 'none'; }
 
 function selMoneyMethod(m) {
@@ -3765,22 +3991,36 @@ function selMoneyMethod(m) {
 
 function skipMoneyDetail() {
   closeMoneyDetail();
-  execSaveMoney(tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran', '');
+  execSaveMoney(tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran', '', 'Lainnya');
 }
 
 function finishMoneyDetail() {
   let name = document.getElementById('tempMoneyName').value.trim();
   const desc = document.getElementById('tempMoneyDesc').value.trim();
+  
+  const trigger = document.getElementById('tempMoneyLabelTrigger');
+  let label = trigger ? trigger.value.trim() : '';
+  
   if(!name) name = tempMoneyType === 'in' ? 'Pemasukan' : 'Pengeluaran';
+  if(!label) { showToast('Pilih label/kategori dulu!'); haptic(20); return; }
+
   const icon = tempMoneyMethod === 'card' ? '💳' : '💵';
   closeMoneyDetail();
-  execSaveMoney(`${name} ${icon}`, desc);
+  execSaveMoney(`${name} ${icon}`, desc, label); // Simpan otomatis
 }
 
-async function execSaveMoney(name, desc) {
+async function execSaveMoney(name, desc, label) {
   if(!curUser) return;
   const tempId = Date.now();
-  const payload = { user_id: curUser.id, type: tempMoneyType, amount: tempMoneyAmt, name: name, keterangan: desc||'', time: Date.now() };
+  const payload = { 
+    user_id: curUser.id, 
+    type: tempMoneyType, 
+    amount: tempMoneyAmt, 
+    name: name, 
+    keterangan: desc || '', 
+    label: label || 'Lainnya', 
+    time: Date.now() 
+  };
   
   // 1. TAMPILKAN DI LAYAR LANGSUNG (Tanpa Delay)
   moneyData.unshift({ id: tempId, ...payload });
@@ -3792,13 +4032,11 @@ async function execSaveMoney(name, desc) {
   const {data, error} = await sb.from('money').insert(payload).select();
   
   if(error) {
-    // Jika upload gagal, tarik kembali datanya dari layar
     moneyData = moneyData.filter(m => m.id !== tempId);
     renderMoney();
     showToast('Gagal sinkron ⚠️');
     alert("Detail Error: " + error.message);
   } else {
-    // Jika sukses, timpa ID sementara dengan ID asli dari Cloud
     const idx = moneyData.findIndex(m => m.id === tempId);
     if(idx !== -1 && data && data.length > 0) {
       moneyData[idx] = data[0];
@@ -3846,6 +4084,17 @@ function editTransaction(id){
   document.getElementById('editMoneyAmount').value = tr.amount;
   document.getElementById('editMoneyName').value = tr.name;
   document.getElementById('editMoneyDesc').value = tr.keterangan || '';
+  
+  currentEditingType = tr.type;
+
+  const trigger = document.getElementById('editMoneyLabelTrigger');
+  if(tr.label) {
+    selectedLabelValue = tr.label;
+    trigger.value = tr.label; // Langsung isi ke trigger
+  } else {
+    selectedLabelValue = '';
+    trigger.value = '';
+  }
 
   const d = new Date(tr.time);
   document.getElementById('editMoneyDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -3866,6 +4115,11 @@ async function saveEditMoney() {
 
   if(!amt || !name || !dStr || !tStr) { showToast('Lengkapi semua data'); haptic(20); return; }
 
+  const trigger = document.getElementById('editMoneyLabelTrigger');
+  let label = trigger ? trigger.value.trim() : '';
+
+  if(!label) { showToast('Lengkapi label/kategori'); haptic(20); return; }
+
   const desc = document.getElementById('editMoneyDesc').value.trim();
   const newTime = new Date(`${dStr}T${tStr}`).getTime();
   const tr = moneyData.find(m => m.id === editTransId);
@@ -3875,12 +4129,13 @@ async function saveEditMoney() {
   tr.name = name;
   tr.keterangan = desc;
   tr.time = newTime;
+  tr.label = label;
 
   closeEditMoney();
   renderMoney();
   showToast('Menyimpan perubahan...');
 
-  const {error} = await sb.from('money').update({amount: amt, name: name, keterangan: desc, time: newTime}).eq('id', editTransId);
+  const {error} = await sb.from('money').update({amount: amt, name: name, keterangan: desc, time: newTime, label: label}).eq('id', editTransId);
   if(error) showToast('Gagal sinkron'); else showToast('Diperbarui ✓');
   haptic(20);
 }
@@ -4053,7 +4308,8 @@ function confirmFinishBudget() {
 async function execFinishBudget() {
   document.getElementById('iosFinishBudgetModal').style.display = 'none';
   if(!activeBudget || !curUser) return;
-  await sb.from('app_budgets').update({is_active: false}).eq('id', activeBudget.id);
+  // Freeze data dengan mengunci end_time ke masa lalu (minus 1 detik) agar transaksi selanjutnya benar-benar tidak masuk!
+  await sb.from('app_budgets').update({is_active: false, end_time: Date.now() - 1000}).eq('id', activeBudget.id);
   await loadMoney();
   showToast('Budget selesai ✓');
   haptic(20);
@@ -4213,7 +4469,7 @@ function renderStatsData() {
 
   // Kelompokkan data berdasarkan nama transaksi (Kategori)
   filtered.forEach(m => {
-    const name = m.name || (m.type === 'in' ? 'Pendapatan' : 'Pengeluaran');
+    const name = m.label || 'Belum Ada Label';
     if(m.type === 'in') {
       tIn += m.amount;
       mapIn[name] = (mapIn[name] || 0) + m.amount;
@@ -4533,10 +4789,10 @@ function confirmFinishNabung() { document.getElementById('iosFinishNabungModal')
 async function execFinishNabung() {
   document.getElementById('iosFinishNabungModal').style.display = 'none';
   if(!activeNabung || !curUser) return;
-  await sb.from('app_budgets').update({is_active: false}).eq('id', activeNabung.id);
+  // Freeze data dengan mengunci end_time!
+  await sb.from('app_budgets').update({is_active: false, end_time: Date.now()}).eq('id', activeNabung.id);
   await loadMoney(); showToast('Tabungan Selesai ✓'); haptic(20);
 }
-
 function confirmDeleteNabung() { document.getElementById('iosDeleteNabungModal').style.display = 'flex'; haptic(15); }
 async function execDeleteNabung() {
   document.getElementById('iosDeleteNabungModal').style.display = 'none';
@@ -4587,6 +4843,28 @@ async function saveNabungProgress() {
       }
       showToast('Tabungan berhasil ditambahkan ✓');
   }
+}
+  function openTargetMenu(type) {
+  const overlay = document.getElementById('targetMenuOverlay');
+  overlay.style.display = 'flex';
+  document.getElementById('targetMenuTitle').textContent = type === 'budget' ? 'Aksi Budget' : 'Aksi Tabungan';
+  
+  document.getElementById('tmSelesai').onclick = () => {
+    overlay.style.display = 'none';
+    if(type === 'budget') confirmFinishBudget();
+    else confirmFinishNabung();
+  };
+  document.getElementById('tmEdit').onclick = () => {
+    overlay.style.display = 'none';
+    if(type === 'budget') openEditBudgetModal();
+    else openEditNabungModal();
+  };
+  document.getElementById('tmHapus').onclick = () => {
+    overlay.style.display = 'none';
+    if(type === 'budget') confirmDeleteBudget();
+    else confirmDeleteNabung();
+  };
+  haptic(15);
 }
 </script>
 
@@ -4668,8 +4946,13 @@ async function saveNabungProgress() {
     <div class="ios-modal-title">Detail Catatan</div>
     <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nama transaksi & metode pembayaran.</div>
     <div style="padding:0 16px 16px;">
-<input type="text" id="tempMoneyName" class="ios-modal-input" onkeydown="if(event.key==='Enter') document.getElementById('tempMoneyDesc').focus()" placeholder="Contoh: Beli kuota..." autocomplete="off">
-      <input type="text" id="tempMoneyDesc" class="ios-modal-input" style="margin-top:10px;" onkeydown="if(event.key==='Enter') finishMoneyDetail()" placeholder="Deskripsi (opsional)..." autocomplete="off">
+<input type="text" id="tempMoneyName" class="ios-modal-input" placeholder="Nama Transaksi (Cth: Isi Bensin)" autocomplete="off">
+      
+      <div style="position:relative; margin-top:10px;" onclick="openLabelSheet('add')">
+        <input type="text" id="tempMoneyLabelTrigger" class="ios-modal-input" placeholder="Tekan untuk pilih label" readonly style="appearance:none; padding-right:32px; background-image:url('data:image/svg+xml,%3Csvg width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 12px center;">
+      </div>
+      
+      <input type="text" id="tempMoneyDesc" class="ios-modal-input" style="margin-top:10px;" onkeydown="if(event.key==='Enter') finishMoneyDetail()" placeholder="Catatan spesifik (opsional)..." autocomplete="off">
       <div class="ios-seg-ctrl" style="margin-top:12px;">
         <button class="ios-seg-btn on" id="btnMethCash" onclick="selMoneyMethod('cash')">💵 Cash</button>
         <button class="ios-seg-btn" id="btnMethCard" onclick="selMoneyMethod('card')">💳 Card</button>
@@ -4689,7 +4972,12 @@ async function saveNabungProgress() {
     <div style="padding:0 16px 16px; display:flex; flex-direction:column; gap:10px;">
       <input type="number" id="editMoneyAmount" class="ios-modal-input" placeholder="Nominal" autocomplete="off">
       <input type="text" id="editMoneyName" class="ios-modal-input" placeholder="Nama Transaksi" autocomplete="off">
-      <input type="text" id="editMoneyDesc" class="ios-modal-input" placeholder="Deskripsi (opsional)" autocomplete="off">
+      
+      <div style="position:relative;" onclick="openLabelSheet('edit')">
+        <input type="text" id="editMoneyLabelTrigger" class="ios-modal-input" placeholder="Tekan untuk pilih label" readonly style="appearance:none; padding-right:32px; background-image:url('data:image/svg+xml,%3Csvg width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 12px center;">
+      </div>
+      
+      <input type="text" id="editMoneyDesc" class="ios-modal-input" placeholder="Catatan spesifik (opsional)" autocomplete="off">
       <div style="display:flex; gap:8px;">
         <input type="date" id="editMoneyDate" class="ios-modal-input" style="flex:1;">
         <div class="ios-time-pill" id="editMoneyTimePill" onclick="openMoneyTimePicker()" style="width:90px; height:42px; border-radius:8px; border:0.5px solid var(--sep2); display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="ios-time-pill-val" id="editMoneyTimeVal" style="font-size:14px;">--:--</span></div>
@@ -4742,6 +5030,32 @@ async function saveNabungProgress() {
     <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Anda sudah memiliki budgeting aktif. Silahkan hapus atau selesaikan yang lama untuk memulai yang baru.</div>
     <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep); display:grid; grid-template-columns: 1fr;">
       <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="document.getElementById('iosBudgetExistsModal').style.display='none'">Tutup</button>
+    </div>
+  </div>
+</div>
+<div id="targetMenuOverlay" style="display:none; position:fixed; inset:0; z-index:2200; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:flex-end; padding:0 12px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);" onclick="if(event.target===this)this.style.display='none'">
+  <div style="width:100%; display:flex; flex-direction:column; gap:10px; animation:ios-as-up 0.32s cubic-bezier(.32,0,.16,1);">
+    <div class="ios-actionsheet">
+      <div class="ios-as-title" id="targetMenuTitle">Aksi</div>
+      <button class="ios-as-item" id="tmSelesai">✓ Selesaikan</button>
+      <button class="ios-as-item" id="tmEdit">✏️ Edit Target</button>
+      <button class="ios-as-item destructive" id="tmHapus">🗑️ Hapus</button>
+    </div>
+    <div class="ios-actionsheet">
+      <button class="ios-as-item cancel" onclick="document.getElementById('targetMenuOverlay').style.display='none'">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="labelSheetOverlay" style="display:none; position:fixed; inset:0; z-index:2200; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:flex-end; justify-content:center; padding:16px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);" onclick="if(event.target===this)this.style.display='none'">
+  <div id="labelSheetContent" style="width:100%; max-width:360px; display:flex; flex-direction:column; gap:10px; animation:ios-as-up 0.32s cubic-bezier(.32,0,.16,1);">
+    
+    <div class="ios-actionsheet hide-scroll" id="labelSheetOptions" style="max-height: 60vh; overflow-y: auto;">
+      <div class="ios-as-title" style="position: sticky; top: 0; background: var(--cd); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 10;">Pilih Label / Kategori</div>
+    </div>
+    
+    <div class="ios-actionsheet" style="flex-shrink: 0;">
+      <button class="ios-as-item cancel" onclick="closeLabelSheet()">Batal</button>
     </div>
   </div>
 </div>
@@ -4886,6 +5200,45 @@ async function saveNabungProgress() {
       <button class="ios-modal-btn cancel" onclick="document.getElementById('iosDeleteNabungModal').style.display='none'">Batal</button>
       <button class="ios-modal-btn destructive" onclick="execDeleteNabung()">Hapus</button>
     </div>
+  </div>
+</div>
+<div id="iosEditLabelModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Edit Label</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nama baru untuk label ini.</div>
+    <div style="padding:0 16px 16px;">
+      <input type="text" id="editLabelNameInput" class="ios-modal-input" placeholder="Nama Label Baru" onkeydown="if(event.key==='Enter') execEditGlobalLabel()">
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="document.getElementById('iosEditLabelModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="execEditGlobalLabel()">Simpan</button>
+    </div>
+  </div>
+</div>
+<div id="iosDeleteLabelModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Hapus Label?</div>
+    <div class="ios-modal-desc" id="iosDeleteLabelDesc" style="padding-bottom:16px; border-bottom:none;">Semua transaksi terkait akan dipindah ke label "Lainnya".</div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosDeleteLabelModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn destructive" onclick="execDeleteGlobalLabel()">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<div id="iosCustomLabelModal" class="ios-modal-overlay" style="display:none">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Label Kustom</div>
+    <div class="ios-modal-desc" style="padding-bottom:12px; border-bottom:none;">Masukkan nama kategori / label baru.</div>
+    <div style="padding:0 16px 16px;">
+      <input type="text" id="customLabelInput" class="ios-modal-input" placeholder="Nama Label Baru" onkeydown="if(event.key==='Enter') execCustomLabel()">
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="document.getElementById('iosCustomLabelModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="execCustomLabel()">Simpan</button>
+    </div>
+  </div>
+</div>
   </div>
 </div>
 </body>
