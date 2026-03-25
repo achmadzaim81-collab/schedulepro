@@ -2416,7 +2416,7 @@ if(addDLTap){addDLTap.textContent='DD/MM/YYYY';addDLTap.classList.add('empty');}
 }
 async function confirmAdd(){
   const t=addTimeValue;const l=(addLabelValue||'').trim();
-  if(!t){showToast('Pilih waktu dulu');return}
+  if(addModalCtx !== 'm' && !t){showToast('Pilih waktu dulu');return}
   if(!l){openCKB('addLabel','Kegiatan',60);return}
   closeMo('moAdd');
   const catId=selectedCat['add']||null;
@@ -2425,7 +2425,7 @@ async function confirmAdd(){
 
   if(addModalCtx==='m'){
     const date = calSelDate || getLocalDate();
-    const item = { time: t, label: l, date: date, cat: catId, priority: priorityVal, deadline: deadlineVal };
+    const item = { time: t || '', label: l, date: date, cat: catId, priority: priorityVal, deadline: deadlineVal };
     const { data, error } = await sb.from('monthly_items').insert({user_id: curUser.id, ...item}).select().single();
     if(!error && data) {
       item.id = data.id;
@@ -2624,7 +2624,7 @@ async function execEdit(){
   const newPrio=editPriorityValue; 
   const newDeadline=(editDeadlineValue||'').trim()||null;
 
-  if(!newTime){showToast('Pilih waktu');return}
+  if(editTarget.type !== 'monthly' && !newTime){showToast('Pilih waktu');return}
   if(!newLabel){openCKB('editLabel','Kegiatan',60);return}
   closeMo('moEdit');
 
@@ -3746,30 +3746,32 @@ const nw = document.getElementById('nabungWrap');
   }
 
   let finalDaysLeft = customDaysLeft !== null ? customDaysLeft : baseDaysLeft;
-  let dailyLimit = Math.max(0, (tIn - tOut) / finalDaysLeft);
-  
-  if(activeBudget) {
+  let dailyLimit = 0;
+
+  if (customDaysLeft !== null) {
+      // Prioritaskan batasan hari dari input user (Hitung dari Total Saldo dibagi jumlah hari)
+      dailyLimit = Math.max(0, (tIn - tOut) / customDaysLeft);
+  } else if (activeBudget) {
+      // Jika tidak di-set manual dan ada budget, hitung harian dari sisa budget
       const bEnd = new Date(activeBudget.end_time);
-      const bDaysLeft = Math.max(1, Math.ceil((bEnd.getTime() - Date.now()) / 86400000));
-      finalDaysLeft = customDaysLeft !== null ? customDaysLeft : bDaysLeft;
+      finalDaysLeft = Math.max(1, Math.ceil((bEnd.getTime() - Date.now()) / 86400000));
       const bSisa = activeBudget.amount - budgetOut;
       dailyLimit = Math.max(0, bSisa / finalDaysLeft);
-      
-      // 3. Proyeksi Kapan Budget Habis
-      const bpt = document.getElementById('budgetProjTxt');
-      if(bpt) {
-          const daysElapsed = Math.max(1, Math.ceil((Date.now() - activeBudget.start_time) / 86400000));
-          const avgPerDay = budgetOut / daysElapsed;
-          if(budgetOut >= activeBudget.amount) {
-              bpt.innerHTML = '<span style="color:var(--red); font-weight:700;">⚠️ Budget sudah habis!</span>';
-          } else if(avgPerDay > 0) {
-              const daysLeftEst = Math.floor((activeBudget.amount - budgetOut) / avgPerDay);
-              const estDate = new Date(Date.now() + (daysLeftEst * 86400000));
-              const estDateStr = estDate.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
-              bpt.innerHTML = `Avg. Pengeluaran: <b>${formatRp(avgPerDay)}</b>/hari.<br>Estimasi habis: <b>${daysLeftEst} hari lagi</b> (${estDateStr})`;
-          } else {
-              bpt.innerHTML = 'Belum ada pengeluaran untuk diestimasi.';
-          }
+  } else {
+      // Default jika tidak ada budget dan tidak ada set manual
+      dailyLimit = Math.max(0, (tIn - tOut) / finalDaysLeft);
+  }
+
+  // 3. Proyeksi Kapan Budget Habis
+  const bpt = document.getElementById('budgetProjTxt');
+  if(bpt) {
+      // Pastikan ngecek budget HANYA kalau activeBudget-nya ada
+      if(activeBudget && budgetOut >= activeBudget.amount) {
+          bpt.innerHTML = '<span style="color:var(--red); font-weight:700;">⚠️ Budget sudah habis!</span>';
+          bpt.style.display = 'block';
+      } else {
+          bpt.innerHTML = '';
+          bpt.style.display = 'none'; // Sembunyikan jika aman atau tidak ada budget
       }
   }
   const dlTxt = document.getElementById('dailyLimitTxt');
@@ -4450,15 +4452,13 @@ async function saveBudgetFinal() {
   let start = Date.now(); let end = start; let d = new Date();
 
   if(tempBudgetType === 'bulan'){
-    start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-    end = new Date(d.getFullYear(), d.getMonth() + duration, 0, 23, 59, 59).getTime();
+    end = new Date(d.getFullYear(), d.getMonth() + duration, d.getDate(), 23, 59, 59).getTime();
   } else if(tempBudgetType === 'minggu') {
-    let day = d.getDay() || 7; d.setHours(0,0,0,0);
-    start = d.getTime() - ((day - 1) * 86400000);
     end = start + (duration * 7 * 86400000) - 1;
   } else {
-    d.setHours(0,0,0,0); start = d.getTime(); end = start + (duration * 86400000) - 1;
+    end = start + (duration * 86400000) - 1;
   }
+  // 'start' otomatis menggunakan Date.now() dari baris sebelumnya, sehingga kalkulasi mulai dari 0 saat dibuat.
 
   closeBudgetAmount();
   if(!curUser) return;
@@ -5181,12 +5181,13 @@ function execSimulasi() {
 
   if(targetSisa > 0) {
       if (customDailyTarget > 0) {
-         let estDays = Math.floor(targetSisa / customDailyTarget);
-         html += `<div style="font-size:11px; color:var(--t3); margin-top:10px; padding-top:10px; border-top:0.5px dotted var(--sep2); line-height:1.4;">`;
-         html += `Dengan target pengeluaran <b>${formatRp(customDailyTarget)}/hari</b>, sisa dana diproyeksikan cukup untuk <b>${estDays} hari</b> lagi.`;
+         let sisaAkhir = targetSisa - customDailyTarget;
+         let txtWarna = sisaAkhir < 0 ? 'var(--red)' : 'var(--green)';
+         html += `<div style="font-size:13px; color:var(--t2); margin-top:10px; padding-top:10px; border-top:0.5px dotted var(--sep2); line-height:1.4;">`;
+         html += `Dikurangi target harian (${formatRp(customDailyTarget)}): <br><b style="font-size:16px; color:${txtWarna};">${formatRp(sisaAkhir)}</b>`;
          html += `</div>`;
       } else {
-         html += `<div style="font-size:11px; color:var(--t3); margin-top:10px; padding-top:10px; border-top:0.5px dotted var(--sep2);">Isi Target Pengeluaran Harian di atas untuk melihat proyeksi sisa hari.</div>`;
+         html += `<div style="font-size:11px; color:var(--t3); margin-top:10px; padding-top:10px; border-top:0.5px dotted var(--sep2);">Isi Target Pengeluaran Harian di atas untuk mensimulasikan pengurangan dana.</div>`;
       }
   }
   
@@ -5620,8 +5621,8 @@ function execSimulasi() {
       <button class="ios-modal-btn" style="color:var(--accent); background:var(--accent-glass); border-radius:10px; padding:12px; font-weight:700; border:none;" onclick="selectIntent('butuh')">🧾 Kebutuhan</button>
       <button class="ios-modal-btn" style="color:#ff9f0a; background:rgba(255,159,10,0.15); border-radius:10px; padding:12px; font-weight:700; border:none;" onclick="selectIntent('ingin')">✨ Keinginan</button>
     </div>
-    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
-      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosIntentModal').style.display='none'">Batal</button>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep); display:flex; justify-content:center;">
+      <button class="ios-modal-btn cancel" style="width:100%; border-right:none;" onclick="document.getElementById('iosIntentModal').style.display='none'">Batal</button>
     </div>
   </div>
 </div>
@@ -5685,5 +5686,442 @@ function resetDailyLimit() {
   haptic(15);
 }
 </script>
+<style>
+  .fin-hub-card {
+     background: var(--cd); border: 0.5px solid var(--cd-b); border-radius: 20px;
+     padding: 20px; display: flex; align-items: center; justify-content: space-between;
+     box-shadow: var(--sh-card); margin-bottom: 14px; cursor: pointer;
+     transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s;
+     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .fin-hub-card:active { transform: scale(0.96); opacity: 0.8; }
+  .fin-hub-icon { font-size: 32px; margin-right: 16px; }
+  .fin-hub-title { font-size: 17px; font-weight: 700; color: var(--t); margin-bottom: 4px; letter-spacing: -0.3px; }
+  .fin-hub-desc { font-size: 13px; color: var(--t2); }
+  .fin-hub-arrow { font-size: 26px; color: var(--t3); font-weight: 400; }
+  
+  .w-tab-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: 600; font-size: 14px;
+      cursor: pointer; transition: 0.2s; font-family: inherit;
+  }
+  .w-tab-btn.on { background: var(--bg-secondary); color: var(--t); box-shadow: var(--sh-sm); }
+  .w-tab-btn:not(.on) { background: transparent; color: var(--t2); }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const pg3 = document.getElementById('pg3');
+    if(!pg3) return;
+
+    // 1. Hub Container
+    const hubView = document.createElement('div');
+    hubView.id = 'financeHubView';
+    hubView.style.marginTop = '10px';
+    hubView.innerHTML = `
+        <div class="fin-hub-card" onclick="openFinanceView('tracker')">
+           <div style="display:flex; align-items:center;">
+              <div class="fin-hub-icon">💸</div>
+              <div><div class="fin-hub-title">Money Tracker</div><div class="fin-hub-desc">Kelola pemasukan & pengeluaran</div></div>
+           </div>
+           <div class="fin-hub-arrow">›</div>
+        </div>
+        <div class="fin-hub-card" onclick="openFinanceView('wishlist')">
+           <div style="display:flex; align-items:center;">
+              <div class="fin-hub-icon">❤️</div>
+              <div><div class="fin-hub-title">Wishlist</div><div class="fin-hub-desc">Daftar barang impian & progresnya</div></div>
+           </div>
+           <div class="fin-hub-arrow">›</div>
+        </div>
+    `;
+
+    // 2. Tracker Wrapper
+    const trackerWrap = document.createElement('div');
+    trackerWrap.id = 'moneyTrackerWrap';
+    trackerWrap.style.display = 'none';
+    const backTrackerBtn = document.createElement('div');
+    backTrackerBtn.innerHTML = `<button onclick="closeFinanceView()" style="background:var(--inp); color:var(--t); border:0.5px solid var(--sep); padding:10px 16px; border-radius:14px; font-weight:600; margin-bottom:20px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;">‹ Kembali ke Menu</button>`;
+    trackerWrap.appendChild(backTrackerBtn);
+
+    const stickyHdr = document.getElementById('stickyHdr3');
+    const topbar = pg3.querySelector('.topbar');
+    Array.from(pg3.children).forEach(child => { if(child !== stickyHdr && child !== topbar) trackerWrap.appendChild(child); });
+
+    // 3. Wishlist Wrapper
+    const wishlistWrap = document.createElement('div');
+    wishlistWrap.id = 'wishlistWrap';
+    wishlistWrap.style.display = 'none';
+    wishlistWrap.innerHTML = `
+        <button onclick="closeFinanceView()" style="background:var(--inp); color:var(--t); border:0.5px solid var(--sep); padding:10px 16px; border-radius:14px; font-weight:600; margin-bottom:20px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;">‹ Kembali ke Menu</button>
+        
+        <button onclick="bukaModalWishlist()" style="width:100%; padding:16px; background:var(--accent); color:#fff; border-radius:18px; border:none; font-weight:700; font-size:16px; box-shadow:0 4px 16px var(--accent-glow); margin-bottom: 20px; cursor:pointer;">+ Tambah Barang Impian</button>
+        
+        <div style="display:flex; background:var(--inp); border-radius:14px; padding:4px; margin-bottom:16px;">
+            <button class="w-tab-btn on" id="wTabAll" onclick="setWTab('all')">Semua Wishlist</button>
+            <button class="w-tab-btn" id="wTabFav" onclick="setWTab('fav')">⭐ Favorit</button>
+        </div>
+
+        <div id="wListContainer" style="display:flex; flex-direction:column; gap:14px; padding-bottom:120px;"></div>
+    `;
+
+    pg3.appendChild(hubView);
+    pg3.appendChild(trackerWrap);
+    pg3.appendChild(wishlistWrap);
+
+    // Navigasi & Navbar Control
+    const originalNavTo = window.navTo;
+    window.navTo = function(p) {
+        originalNavTo(p);
+        const navEl = document.querySelector('.nav') || document.getElementById('navBar'); // Deteksi elemen navigasi bawah otomatis
+        if(p === 3) {
+            const hub = document.getElementById('financeHubView');
+            if(hub && hub.style.display !== 'none') {
+                if(navEl) navEl.style.display = 'flex';
+                const mFab = document.getElementById('moneyFabWrap'); if(mFab) mFab.style.display = 'none';
+            }
+        } else {
+            if(navEl) navEl.style.display = 'flex';
+        }
+    };
+});
+
+// --- PENGENDALI TAMPILAN ---
+window.openFinanceView = function(view) {
+    document.getElementById('financeHubView').style.display = 'none';
+    document.getElementById('moneyTrackerWrap').style.display = view === 'tracker' ? 'block' : 'none';
+    document.getElementById('wishlistWrap').style.display = view === 'wishlist' ? 'block' : 'none';
+    
+    // Sembunyikan Navigasi Bawah
+    const navEl = document.querySelector('.nav') || document.getElementById('navBar');
+    if(navEl) navEl.style.display = 'none';
+    
+    const mFab = document.getElementById('moneyFabWrap');
+    if(mFab) mFab.style.display = view === 'tracker' ? 'block' : 'none';
+
+    if(view === 'wishlist') loadWishlistsFromDB();
+    if(navigator.vibrate) navigator.vibrate(15);
+};
+
+window.closeFinanceView = function() {
+    document.getElementById('financeHubView').style.display = 'block';
+    document.getElementById('moneyTrackerWrap').style.display = 'none';
+    document.getElementById('wishlistWrap').style.display = 'none';
+    
+    // Munculkan Navigasi Bawah Kembali
+    const navEl = document.querySelector('.nav') || document.getElementById('navBar');
+    if(navEl) navEl.style.display = 'flex';
+    
+    const mFab = document.getElementById('moneyFabWrap');
+    if(mFab) mFab.style.display = 'none';
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+// --- LOGIKA WISHLIST SUPER ---
+let myWishlist = [];
+let wTabMode = 'all';
+let tempWImageBase64 = '';
+let targetWId = null;
+let wEditModeId = null;
+
+window.setWTab = function(tab) {
+    wTabMode = tab;
+    document.getElementById('wTabAll').classList.toggle('on', tab === 'all');
+    document.getElementById('wTabFav').classList.toggle('on', tab === 'fav');
+    renderWishlist();
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+// Auto Compress Image to Base64
+window.wImageSelected = function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300; // Kecilin ukuran biar ga ngelag
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            tempWImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            const preview = document.getElementById('wImagePreview');
+            preview.src = tempWImageBase64; preview.style.display = 'block';
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+async function loadWishlistsFromDB() {
+    if(typeof curUser === 'undefined' || !curUser) {
+        // Fallback ke localStorage jika belum login / belum ada Supabase auth
+        myWishlist = JSON.parse(localStorage.getItem('focusProWishlistData')) || [];
+        renderWishlist();
+        return;
+    }
+    const { data, error } = await sb.from('wishlists').select('*').eq('user_id', curUser.id).order('created_at', { ascending: false });
+    if(!error && data) { myWishlist = data; renderWishlist(); }
+}
+
+window.bukaModalWishlist = function() {
+    wEditModeId = null;
+    document.getElementById('wName').value = ''; document.getElementById('wPrice').value = ''; document.getElementById('wDate').value = '';
+    document.getElementById('wImageInput').value = ''; document.getElementById('wImagePreview').style.display = 'none';
+    tempWImageBase64 = '';
+    document.getElementById('iosWishlistModalTitle').textContent = "✨ Tambah Wishlist";
+    document.getElementById('iosWishlistModal').style.display = 'flex';
+    if(navigator.vibrate) navigator.vibrate(15);
+};
+
+window.simpanWishlist = async function() {
+    const name = document.getElementById('wName').value;
+    const price = document.getElementById('wPrice').value;
+    const date = document.getElementById('wDate').value;
+    if (!name || !price) { alert('Nama dan Harga barang wajib diisi!'); return; }
+
+    document.getElementById('iosWishlistModal').style.display = 'none';
+    if(typeof showToast === 'function') showToast('Menyimpan wishlist... ⏳');
+
+    const payload = {
+        name: name, price: parseFloat(price),
+        target_date: date || null, image_data: tempWImageBase64 || null
+    };
+
+    if (wEditModeId) {
+        const idx = myWishlist.findIndex(x => x.id === wEditModeId);
+        if(idx !== -1) myWishlist[idx] = { ...myWishlist[idx], ...payload };
+        renderWishlist();
+        
+        if(typeof curUser !== 'undefined' && curUser) {
+            await sb.from('wishlists').update(payload).eq('id', wEditModeId);
+        } else {
+            localStorage.setItem('focusProWishlistData', JSON.stringify(myWishlist));
+        }
+        if(typeof showToast === 'function') showToast('Wishlist diperbarui ✓');
+    } else {
+        const tempId = Date.now().toString(); 
+        const newW = { id: tempId, ...payload, saved_amount: 0, is_favorite: false };
+        myWishlist.unshift(newW);
+        renderWishlist();
+        
+        if(typeof curUser !== 'undefined' && curUser) {
+            payload.user_id = curUser.id;
+            const { data, error } = await sb.from('wishlists').insert(payload).select();
+            if(!error && data && data.length > 0) {
+                const realIdx = myWishlist.findIndex(x => x.id === tempId);
+                if(realIdx !== -1) myWishlist[realIdx] = data[0];
+            }
+        } else {
+            localStorage.setItem('focusProWishlistData', JSON.stringify(myWishlist));
+        }
+        if(typeof showToast === 'function') showToast('Tersimpan ✓');
+    }
+    if(navigator.vibrate) navigator.vibrate(20);
+};
+
+window.renderWishlist = function() {
+    const container = document.getElementById('wListContainer');
+    if(!container) return; container.innerHTML = '';
+    
+    let listToRender = wTabMode === 'fav' ? myWishlist.filter(w => w.is_favorite) : myWishlist;
+
+    if (listToRender.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--t2); font-size:14px; margin-top:40px;">${wTabMode==='fav' ? 'Belum ada wishlist favorit.' : 'Belum ada barang impian.<br>Ayo tambahkan!'}</div>`;
+        return;
+    }
+
+    listToRender.forEach(w => {
+        const priceFmt = w.price.toLocaleString('id-ID');
+        const savedFmt = (parseFloat(w.saved_amount) || 0).toLocaleString('id-ID');
+        const pct = Math.min(100, ((parseFloat(w.saved_amount) || 0) / w.price) * 100).toFixed(1);
+
+        container.innerHTML += `
+        <div class="glass-panel" style="background: var(--cd); border: 0.5px solid var(--cd-b); border-radius: 18px; padding: 14px; padding-bottom: 20px; display:flex; gap:12px; align-items: center; box-shadow: var(--sh-card); position:relative; overflow:hidden; cursor:pointer;" onclick="bukaWDetail('${w.id}')">
+            
+            <div style="position:absolute; bottom:0; left:0; height:4px; width:100%; background:var(--inp);">
+                 <div style="height:100%; width:${pct}%; background:${pct >= 100 ? 'var(--green)' : 'var(--accent)'}; transition:width 0.3s;"></div>
+            </div>
+            
+            <img src="${w.image_data}" style="width:64px; height:64px; border-radius:12px; object-fit:cover; display:${w.image_data?'block':'none'}; border:0.5px solid var(--sep);">
+            
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:16px; color:var(--t); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${w.is_favorite ? '⭐ ' : ''}${w.name}</div>
+                <div style="color:var(--accent); font-weight:800; font-size:14px; margin-bottom:4px;">Rp ${priceFmt}</div>
+                <div style="font-size:11px; color:var(--t2);">Terkumpul: Rp ${savedFmt} <b style="color:var(--t)">(${pct}%)</b></div>
+            </div>
+            
+            <button onclick="bukaWMenu(event, '${w.id}')" style="background:transparent; border:none; color:var(--t2); font-size:24px; padding:10px; cursor:pointer; font-weight:bold; margin-right:-8px;">⋮</button>
+        </div>`;
+    });
+};
+
+// --- AKSI MENU & DETAIL WISHLIST ---
+window.bukaWMenu = function(e, id) {
+    e.stopPropagation(); targetWId = id;
+    const w = myWishlist.find(x => x.id == id);
+    if(!w) return;
+    document.getElementById('waFav').textContent = w.is_favorite ? '⭐ Hapus dari Favorit' : '⭐ Jadikan Favorit';
+    document.getElementById('wActionsheetOverlay').style.display = 'flex';
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+window.waEdit = function() {
+    document.getElementById('wActionsheetOverlay').style.display = 'none';
+    const w = myWishlist.find(x => x.id == targetWId);
+    if(!w) return;
+    wEditModeId = w.id;
+    document.getElementById('wName').value = w.name;
+    document.getElementById('wPrice').value = w.price;
+    document.getElementById('wDate').value = w.target_date || '';
+    tempWImageBase64 = w.image_data || '';
+    const preview = document.getElementById('wImagePreview');
+    if(tempWImageBase64) { preview.src = tempWImageBase64; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+    document.getElementById('iosWishlistModalTitle').textContent = "✏️ Edit Wishlist";
+    document.getElementById('iosWishlistModal').style.display = 'flex';
+};
+
+window.waToggleFav = async function() {
+    document.getElementById('wActionsheetOverlay').style.display = 'none';
+    const w = myWishlist.find(x => x.id == targetWId);
+    if(!w) return;
+    w.is_favorite = !w.is_favorite; renderWishlist();
+    if(typeof curUser !== 'undefined' && curUser) {
+        await sb.from('wishlists').update({ is_favorite: w.is_favorite }).eq('id', w.id);
+    } else {
+        localStorage.setItem('focusProWishlistData', JSON.stringify(myWishlist));
+    }
+};
+
+window.confirmHapusW = function() {
+    document.getElementById('wActionsheetOverlay').style.display = 'none';
+    document.getElementById('iosWConfirmModal').style.display = 'flex';
+};
+
+window.execHapusW = async function() {
+    document.getElementById('iosWConfirmModal').style.display = 'none';
+    if(!targetWId) return;
+    myWishlist = myWishlist.filter(x => x.id != targetWId); renderWishlist();
+    if(typeof curUser !== 'undefined' && curUser) {
+        await sb.from('wishlists').delete().eq('id', targetWId);
+        if(typeof showToast === 'function') showToast('Wishlist dihapus 🗑️');
+    } else {
+        localStorage.setItem('focusProWishlistData', JSON.stringify(myWishlist));
+    }
+};
+
+window.bukaWDetail = function(id) {
+    const w = myWishlist.find(x => x.id == id);
+    if(!w) return; targetWId = id;
+    
+    const img = document.getElementById('wdImg');
+    if(w.image_data) { img.src = w.image_data; img.style.display = 'block'; } else { img.style.display = 'none'; }
+    
+    document.getElementById('wdName').textContent = w.name;
+    document.getElementById('wdPrice').textContent = "Rp " + w.price.toLocaleString('id-ID');
+    document.getElementById('wdSaved').textContent = "Rp " + (parseFloat(w.saved_amount)||0).toLocaleString('id-ID');
+    
+    const pct = Math.min(100, ((parseFloat(w.saved_amount)||0) / w.price) * 100).toFixed(1);
+    document.getElementById('wdPct').textContent = pct + '%';
+    document.getElementById('wdFill').style.width = pct + '%';
+    document.getElementById('wdFill').style.background = pct >= 100 ? 'var(--green)' : 'var(--accent)';
+    
+    document.getElementById('wAddSaldo').value = '';
+    document.getElementById('iosWDetailModal').style.display = 'flex';
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+window.simpanSaldoWishlist = async function() {
+    const amt = parseFloat(document.getElementById('wAddSaldo').value);
+    if(!amt || amt <= 0) return;
+    
+    const w = myWishlist.find(x => x.id == targetWId);
+    if(!w) return;
+    
+    w.saved_amount = (parseFloat(w.saved_amount) || 0) + amt;
+    document.getElementById('iosWDetailModal').style.display = 'none';
+    renderWishlist();
+    if(typeof showToast === 'function') showToast('Menambah saldo... ⏳');
+    
+    if(typeof curUser !== 'undefined' && curUser) {
+        await sb.from('wishlists').update({ saved_amount: w.saved_amount }).eq('id', w.id);
+        if(typeof showToast === 'function') showToast('Saldo Diperbarui ✓');
+    } else {
+        localStorage.setItem('focusProWishlistData', JSON.stringify(myWishlist));
+    }
+};
+</script>
+
+<div id="iosWishlistModal" class="ios-modal-overlay" style="display:none; z-index:2600;">
+  <div class="ios-modal glass-panel" style="background: var(--bg-secondary); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 1px solid var(--sep); box-shadow: var(--sh-sm); border-radius: 24px; width: 90%; max-width: 340px; padding-top:20px;">
+    <div class="ios-modal-title" id="iosWishlistModalTitle" style="margin-bottom:5px;">✨ Tambah Wishlist</div>
+    <div class="ios-modal-desc" style="padding: 0 16px 16px; border-bottom: none;">Barang apa yang lagi kamu incer?</div>
+    <div style="padding:0 16px 16px; display:flex; flex-direction:column; gap:12px;">
+        <div style="position:relative; width:100%; background:var(--inp); border-radius:12px; border:1px dashed var(--sep2); text-align:center; cursor:pointer; overflow:hidden;">
+             <img id="wImagePreview" style="display:none; width:100%; height:120px; object-fit:cover;">
+             <div style="padding:16px; color:var(--t2); font-size:12px; font-weight:600;" onclick="document.getElementById('wImageInput').click()">📷 Upload Foto Barang (Opsional)</div>
+             <input type="file" id="wImageInput" accept="image/*" style="display:none;" onchange="wImageSelected(event)">
+        </div>
+        <input type="text" id="wName" class="ios-modal-input" placeholder="Nama Barang (ex: Gitar)" style="border-radius:12px;">
+        <input type="number" id="wPrice" class="ios-modal-input" placeholder="Harga (ex: 1500000)" style="border-radius:12px;">
+        <div style="text-align:left; font-size:12px; font-weight:600; color:var(--t2); margin-top:4px;">Target Tercapai (Opsional):</div>
+        <input type="date" id="wDate" class="ios-modal-input" style="border-radius:12px;">
+    </div>
+    <div class="ios-modal-btns" style="display:flex; border-top: 0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" style="color:var(--red);" onclick="document.getElementById('iosWishlistModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn" style="color:var(--accent); font-weight:700;" onclick="simpanWishlist()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div id="iosWDetailModal" class="ios-modal-overlay" style="display:none; z-index:2600;">
+  <div class="ios-modal glass-panel" style="max-width:340px;">
+    <img id="wdImg" style="width:100%; height:160px; object-fit:cover; display:none; border-bottom:0.5px solid var(--sep);">
+    <div style="padding:16px;">
+        <div id="wdName" style="font-size:18px; font-weight:800; color:var(--t); margin-bottom:4px; text-align:left;">Nama Barang</div>
+        <div id="wdPrice" style="font-size:16px; color:var(--accent); font-weight:700; margin-bottom:16px; text-align:left;">Rp 0</div>
+        
+        <div style="font-size:12px; color:var(--t2); margin-bottom:6px; display:flex; justify-content:space-between;">
+            <span>Terkumpul: <b id="wdSaved" style="color:var(--t);">Rp 0</b></span>
+            <span id="wdPct" style="font-weight:700;">0%</span>
+        </div>
+        <div style="height:8px; background:var(--inp); border-radius:4px; overflow:hidden; margin-bottom:20px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+            <div id="wdFill" style="height:100%; width:0%; background:var(--accent); transition: width 0.4s ease;"></div>
+        </div>
+
+        <div style="text-align:left; font-size:12px; font-weight:600; color:var(--t2); margin-bottom:6px;">+ Tambah Pemasukan Saldo:</div>
+        <input type="number" id="wAddSaldo" class="ios-modal-input" placeholder="Nominal Tabungan Baru">
+    </div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosWDetailModal').style.display='none'">Tutup</button>
+      <button class="ios-modal-btn" style="color:var(--green); font-weight:700;" onclick="simpanSaldoWishlist()">Tambah</button>
+    </div>
+  </div>
+</div>
+
+<div id="wActionsheetOverlay" style="display:none; position:fixed; inset:0; z-index:2700; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:flex-end; padding:0 12px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);" onclick="if(event.target===this)this.style.display='none'">
+  <div style="width:100%; display:flex; flex-direction:column; gap:10px; animation:ios-as-up 0.32s cubic-bezier(.32,0,.16,1);">
+    <div class="ios-actionsheet">
+      <div class="ios-as-title">Aksi Wishlist</div>
+      <button class="ios-as-item" id="waFav" onclick="waToggleFav()">⭐ Jadikan Favorit</button>
+      <button class="ios-as-item" id="waEdit" onclick="waEdit()">✏️ Edit Detail</button>
+      <button class="ios-as-item destructive" onclick="confirmHapusW()">🗑️ Hapus Wishlist</button>
+    </div>
+    <div class="ios-actionsheet">
+      <button class="ios-as-item cancel" onclick="document.getElementById('wActionsheetOverlay').style.display='none'">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="iosWConfirmModal" class="ios-modal-overlay" style="display:none; z-index:2800;">
+  <div class="ios-modal glass-panel">
+    <div class="ios-modal-title">Hapus Wishlist?</div>
+    <div class="ios-modal-desc" style="padding-bottom:16px; border-bottom:none;">Barang impian beserta progres saldonya akan terhapus. Yakin?</div>
+    <div class="ios-modal-btns" style="border-top:0.5px solid var(--sep);">
+      <button class="ios-modal-btn cancel" onclick="document.getElementById('iosWConfirmModal').style.display='none'">Batal</button>
+      <button class="ios-modal-btn destructive" onclick="execHapusW()">Hapus</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
