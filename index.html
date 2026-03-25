@@ -6123,5 +6123,79 @@ window.simpanSaldoWishlist = async function() {
     </div>
   </div>
 </div>
+<script>
+window.renderWishlist = function() {
+    const container = document.getElementById('wListContainer');
+    if(!container) return; container.innerHTML = '';
+    
+    let listToRender = wTabMode === 'fav' ? myWishlist.filter(w => w.is_favorite) : myWishlist;
+
+    if (listToRender.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--t2); font-size:14px; margin-top:40px;">${wTabMode==='fav' ? 'Belum ada wishlist favorit.' : 'Belum ada barang impian.<br>Ayo tambahkan!'}</div>`;
+        return;
+    }
+
+    listToRender.forEach(w => {
+        // Konversi paksa ke Number agar aman dari error toLocaleString
+        const wPrice = Number(w.price) || 0;
+        const wSaved = Number(w.saved_amount) || 0;
+        const priceFmt = wPrice.toLocaleString('id-ID');
+        const savedFmt = wSaved.toLocaleString('id-ID');
+        const pct = wPrice > 0 ? Math.min(100, (wSaved / wPrice) * 100).toFixed(1) : 0;
+
+        container.innerHTML += `
+        <div class="glass-panel" style="background: var(--cd); border: 0.5px solid var(--cd-b); border-radius: 18px; padding: 14px; padding-bottom: 20px; display:flex; gap:12px; align-items: center; box-shadow: var(--sh-card); position:relative; overflow:hidden; cursor:pointer;" onclick="bukaWDetail('${w.id}')">
+            
+            <div style="position:absolute; bottom:0; left:0; height:4px; width:100%; background:var(--inp); z-index: 1;">
+                 <div style="height:100%; width:${pct}%; background:${pct >= 100 ? 'var(--green)' : 'var(--accent)'}; transition:width 0.3s;"></div>
+            </div>
+            
+            <img src="${w.image_data}" style="width:64px; height:64px; border-radius:12px; object-fit:cover; display:${w.image_data?'block':'none'}; border:0.5px solid var(--sep); position:relative; z-index: 2;">
+            
+            <div style="flex:1; min-width:0; position:relative; z-index: 2;">
+                <div style="font-weight:700; font-size:16px; color:var(--t); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${w.is_favorite ? '⭐ ' : ''}${w.name}</div>
+                <div style="color:var(--accent); font-weight:800; font-size:14px; margin-bottom:4px;">Rp ${priceFmt}</div>
+                <div style="font-size:11px; color:var(--t2);">Terkumpul: Rp ${savedFmt} <b style="color:var(--t)">(${pct}%)</b></div>
+            </div>
+            
+            <button onclick="event.stopPropagation(); bukaWMenu('${w.id}')" style="position:relative; z-index:10; background:transparent; border:none; color:var(--t2); font-size:24px; padding:10px; cursor:pointer; font-weight:bold; margin-right:-8px;">⋮</button>
+        </div>`;
+    });
+};
+
+window.bukaWMenu = function(id) {
+    targetWId = id;
+    const w = myWishlist.find(x => x.id == id);
+    if(!w) return;
+    document.getElementById('waFav').textContent = w.is_favorite ? '⭐ Hapus dari Favorit' : '⭐ Jadikan Favorit';
+    document.getElementById('wActionsheetOverlay').style.display = 'flex';
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+window.bukaWDetail = function(id) {
+    const w = myWishlist.find(x => x.id == id);
+    if(!w) return; targetWId = id;
+    
+    // Pastikan pakai Number agar tidak error
+    const wPrice = Number(w.price) || 0;
+    const wSaved = Number(w.saved_amount) || 0;
+    
+    const img = document.getElementById('wdImg');
+    if(w.image_data) { img.src = w.image_data; img.style.display = 'block'; } else { img.style.display = 'none'; }
+    
+    document.getElementById('wdName').textContent = w.name;
+    document.getElementById('wdPrice').textContent = "Rp " + wPrice.toLocaleString('id-ID');
+    document.getElementById('wdSaved').textContent = "Rp " + wSaved.toLocaleString('id-ID');
+    
+    const pct = wPrice > 0 ? Math.min(100, (wSaved / wPrice) * 100).toFixed(1) : 0;
+    document.getElementById('wdPct').textContent = pct + '%';
+    document.getElementById('wdFill').style.width = pct + '%';
+    document.getElementById('wdFill').style.background = pct >= 100 ? 'var(--green)' : 'var(--accent)';
+  
+    document.getElementById('wAddSaldo').value = '';
+    document.getElementById('iosWDetailModal').style.display = 'flex';
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+</script>
 </body>
 </html>
