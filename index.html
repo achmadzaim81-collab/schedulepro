@@ -1215,6 +1215,19 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   z-index: 300;
   display: none;
 }
+.desk-menu-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; color: var(--t2); font-size: 24px;
+  cursor: pointer; padding: 12px 18px; font-weight: bold;
+  display: none; z-index: 20; font-family: inherit;
+  transition: color 0.2s;
+}
+.desk-menu-btn:hover {
+  color: var(--accent);
+}
+@media(min-width: 768px) {
+  .desk-menu-btn { display: block; }
+}
 </style>
 </head>
 <body>
@@ -1628,7 +1641,8 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
       </div>
 
       <!-- Kategori -->
-            <div>
+            
+      <div style="margin-top:10px;">
         <div class="ios-cat-label">Prioritas</div>
         <div style="display:flex;gap:8px;">
           <button class="priority-pill-btn priority-urgent" id="addPrioUrgent" onclick="toggleAddPriority()">🔴 Urgent</button>
@@ -1816,8 +1830,38 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   </div>
 </div>
 
+<div class="ov" id="ckbOverlay" style="align-items:flex-end; padding:0; z-index:2600;" onclick="if(event.target===this)closeCKB()">
+  <div id="ckbPanel" onclick="event.stopPropagation()">
+    <div class="ckb-header">
+      <button class="ckb-header-close" onclick="closeCKB()">✕</button>
+      <div class="ckb-header-title" id="ckbHint">Ketik</div>
+      <button class="ckb-header-done-btn" id="ckbDoneBtn" onclick="ckbDone()">Simpan</button>
+    </div>
+    <div class="ckb-display">
+      <div class="ckb-text-big empty" id="ckbDisplay"></div>
+      <div class="ckb-progress-row">
+        <div class="ckb-progress-bar-wrap"><div class="ckb-progress-bar-fill" id="ckbProgressFill" style="width:0%"></div></div>
+        <div class="ckb-char-count" id="ckbCount">0/60</div>
+      </div>
+    </div>
+    <div class="ckb-rows" id="ckbRows"></div>
+    <div class="ckb-bottom" id="ckbEnterBtn" style="display:none; padding:5px 5px 10px; margin-top:5px;">
+      <button class="ck enter-key" onclick="ckbNewline()" style="width:100%; height:44px; border-radius:12px; font-weight:600; background:rgba(255,255,255,0.1); color:var(--t); border:none;">⏎ Return</button>
+    </div>
+  </div>
+</div>
+
 
 <div id="toast"></div>
+
+<div class="ov" id="moDeskItemMenu" onclick="if(event.target===this)closeMo('moDeskItemMenu')">
+  <div class="sh ios-actionsheet" style="max-width:300px; border-radius:16px; margin:auto; top:50%; transform:translateY(-50%) scale(0.9); position:relative;">
+    <button class="ios-as-item" onclick="closeMo('moDeskItemMenu'); if(window._curDeskEdit) window._curDeskEdit();">Edit</button>
+    <button class="ios-as-item destructive" onclick="closeMo('moDeskItemMenu'); if(window._curDeskDel) window._curDeskDel();">Hapus</button>
+    <div style="height:8px;background:var(--sep)"></div>
+    <button class="ios-as-item" style="font-weight:600; color:var(--t);" onclick="closeMo('moDeskItemMenu')">Batal</button>
+  </div>
+</div>
 
 <script>
 const SB_URL='https://fcftupjevizxgqqhnolw.supabase.co';
@@ -1843,7 +1887,7 @@ function saveCatsLocal(){
   userPrefs.custom_cats = custom;
   saveUserPrefs();
 }
-function getCat(id){return categories.find(c=>c.id===id)||{name:'',color:'#888'}}
+function getCat(id){return {name:'',color:'var(--accent)'}}
 
 const KEYS=['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
 const FULL=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
@@ -2013,14 +2057,8 @@ function priorityLabel(p){
 }
 function parseDeadline(input){
   if(!input)return null;
-  const clean=input.replace(/\D/g,'');
-  if(clean.length<8)return null;
-  const d=clean.slice(0,2);
-  const m=clean.slice(2,4);
-  const y=clean.slice(4,8);
-  const dt=new Date(`${y}-${m}-${d}`);
-  if(isNaN(dt))return null;
-  return`${y}-${m}-${d}`;
+  // Langsung kembalikan input karena sudah dalam format YYYY-MM-DD yang valid untuk database
+  return input;
 }
   
 function deadlineStr(d){
@@ -2347,10 +2385,9 @@ if(addDLTap){addDLTap.textContent='DD/MM/YYYY';addDLTap.classList.add('empty');}
 }
 async function confirmAdd(){
   const t=addTimeValue;const l=(addLabelValue||'').trim();
-  if(addModalCtx !== 'm' && !t){showToast('Pilih waktu dulu');return}
   if(!l){openCKB('addLabel','Kegiatan',60);return}
   closeMo('moAdd');
-  const catId=selectedCat['add']||null;
+  const catId=null; // Kategori dihapus
   const priorityVal=addPriorityValue||'normal';
   const deadlineVal=parseDeadline(addDeadlineCKBValue)||null;
 
@@ -2449,8 +2486,8 @@ function closeMo(id){
 
 async function confirmPerm(type){
   closeMo('moPermConf');if(!pendingWeeklyItem)return;
-  const{time,label,cat}=pendingWeeklyItem;pendingWeeklyItem=null;
-  const item={time,label,cat,perm:type==='perm',daily_repeat:type==='daily',week_added:THIS_WEEK};
+  const{time,label,cat,priority,deadline}=pendingWeeklyItem;pendingWeeklyItem=null;
+  const item={time,label,cat,priority,deadline,perm:type==='perm',daily_repeat:type==='daily',week_added:THIS_WEEK};
   const dbId=await saveWeekly(item);
   if(dbId){
     item.id=dbId;item.dbId=dbId;weekly[selDay].push(item);weekly[selDay].sort((a,b)=>a.time.localeCompare(b.time));
@@ -2555,7 +2592,6 @@ async function execEdit(){
   const newPrio=editPriorityValue; 
   const newDeadline=(editDeadlineValue||'').trim()||null;
 
-  if(editTarget.type !== 'monthly' && !newTime){showToast('Pilih waktu');return}
   if(!newLabel){openCKB('editLabel','Kegiatan',60);return}
   closeMo('moEdit');
 
@@ -2631,8 +2667,10 @@ function renderDaily(){
       sep.innerHTML='<div style="flex:1;height:0.5px;background:var(--sep)"></div><span style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Selesai</span><div style="flex:1;height:0.5px;background:var(--sep)"></div>';
       list.appendChild(sep);
     }
-    const[hh,mm]=it.time.split(':'),h=parseInt(hh),h12=h%12||12;
-    const card=mkItem({h12,mm,per:period(h),label:it.label,cat:it.cat,perm:false,showPerm:false,delay:i*.03,dbId:it.dbId,priority:it.priority,deadline:it.deadline,
+    const timeStr = it.time || '';
+    let h12='--', mm='--', h=0;
+    if(timeStr){ const [hh,m] = timeStr.split(':'); h=parseInt(hh); h12=h%12||12; mm=m; }
+    const card=mkItem({h12,mm,per:timeStr?period(h):'',label:it.label,cat:it.cat,perm:false,showPerm:false,delay:i*.03,dbId:it.dbId,priority:it.priority,deadline:it.deadline,
           is_from_weekly: it.is_from_weekly,
           onDel:()=>confirmDel(it,'daily'),onEdit:()=>openEdit(it,'daily'),
       onTap:()=>{
@@ -2672,8 +2710,10 @@ function renderWeekly(){
   const show=filtered.length>0;
   emp.style.display=show?'none':'block';sec.style.display=items.length>0?'block':'none';
   filtered.forEach((it,i)=>{
-    const[hh,mm]=it.time.split(':'),h=parseInt(hh),h12=h%12||12;
-    const card=mkItem({h12,mm,per:period(h),label:it.label,cat:it.cat,perm:it.perm,showPerm:true,delay:i*.03,dbId:it.dbId,priority:it.priority,deadline:it.deadline,
+    const timeStr = it.time || '';
+    let h12='--', mm='--', h=0;
+    if(timeStr){ const [hh,m] = timeStr.split(':'); h=parseInt(hh); h12=h%12||12; mm=m; }
+    const card=mkItem({h12,mm,per:timeStr?period(h):'',label:it.label,cat:it.cat,perm:it.perm,showPerm:true,delay:i*.03,dbId:it.dbId,priority:it.priority,deadline:it.deadline,
       onDel:()=>confirmDel(it,'weekly'),onEdit:()=>openEdit(it,'weekly'),
       onTap:()=>openTaskModal(it),
       isWeekly:true});
@@ -2724,7 +2764,7 @@ function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTa
 
   inner.innerHTML=`
     <div class="i-left">
-      <div class="i-h">${String(h12).padStart(2,'0')}:${mm}</div>
+      <div class="i-h">${h12 === '--' ? '--' : String(h12).padStart(2,'0')}:${mm}</div>
       <div class="i-sub">${per}</div>
     </div>
     <div class="i-body">
@@ -2732,6 +2772,27 @@ function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTa
       ${prioHtml}${dlHtml}${taskInfo}${weeklyBadge}
     </div>
   `;
+
+  if (isDesktop() && !is_from_weekly && !done) {
+    const dBtn = document.createElement('button');
+    dBtn.className = 'desk-menu-btn';
+    dBtn.innerHTML = '⋮';
+    
+    // Gunakan fungsi klik yang memblokir trigger "Done" dari kartu utama
+    const triggerMenu = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window._curDeskEdit = onEdit;
+      window._curDeskDel = onDel;
+      openMo('moDeskItemMenu');
+    };
+    
+    // Deteksi klik mouse & layar sentuh (bila PC pakai touchscreen)
+    dBtn.onmousedown = triggerMenu;
+    dBtn.onclick = triggerMenu;
+    
+    inner.appendChild(dBtn);
+  }
 
   if(onTap){
     inner.addEventListener('click',e=>{
@@ -2949,71 +3010,62 @@ let _ckbDisp=null;let _ckbCnt=null;
 let _delHoldTimer=null;let _delHoldInterval=null;
 
 function openCKB(ctx, hint, maxLen) {
-  // Di desktop pakai input biasa, bukan custom keyboard
-  if(isDesktop()){
-    _openDesktopInput(ctx, hint, maxLen);
-    return;
-  }
-  ckbCtx=ctx;ckbMaxLen=maxLen||60;ckbMode='alpha';ckbCaps=false;
-  ckbValue=ctx==='addLabel'?(addLabelValue||''):ctx==='editLabel'?(editLabelValue||''):ctx==='quickNote'?(quickNoteValue||''):ctx==='addDeadline'?(addDeadlineCKBValue||''):(catLabelValue||'');
-  ckbShift=ckbValue.length===0;
-  const hintEl=document.getElementById('ckbHint');if(hintEl)hintEl.textContent=hint;
-  if(!_ckbBuilt)_ckbInit();
-  _ckbSyncMode();_ckbSyncShift();_ckbSyncDisplay();
-  document.getElementById('ckbOverlay').classList.add('on');
-  const enterBtn=document.getElementById('ckbEnterBtn');
-  const doneBtn=document.getElementById('ckbDoneBtn');
-  if(ctx==='quickNote'){
-    if(enterBtn)enterBtn.style.display='flex';
-    if(doneBtn)doneBtn.textContent='Kirim';
-  } else {
-    if(enterBtn)enterBtn.style.display='none';
-    if(doneBtn)doneBtn.textContent='Simpan';
-  }
-  document.addEventListener('keydown',_ckbSystemKey);
-  haptic(12);
+  // Panggil input bawaan (native keyboard) untuk SEMUA perangkat
+  _openNativeInput(ctx, hint, maxLen);
 }
 
-function _openDesktopInput(ctx, hint, maxLen){
-  const existing=document.getElementById('desktopInputOverlay');
+function _openNativeInput(ctx, hint, maxLen){
+  const existing=document.getElementById('nativeInputOverlay');
   if(existing)existing.remove();
+  
   const curVal=ctx==='addLabel'?(addLabelValue||''):ctx==='editLabel'?(editLabelValue||''):ctx==='quickNote'?(quickNoteValue||''):ctx==='addDeadline'?(addDeadlineCKBValue||''):(catLabelValue||'');
   const isNote=ctx==='quickNote';
+  
   const ov=document.createElement('div');
-  ov.id='desktopInputOverlay';
-  ov.style.cssText='position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.5);backdrop-filter:blur(12px);';
+  ov.id='nativeInputOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:2600;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);';
+  
   const box=document.createElement('div');
-  box.style.cssText='background:var(--bg-secondary);border:0.5px solid var(--sep);border-radius:20px;padding:24px;width:100%;max-width:400px;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:14px;';
+  box.style.cssText='background:var(--bg-secondary);border:0.5px solid var(--sep);border-radius:24px;padding:24px 24px 0 24px;width:100%;max-width:320px;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:16px;text-align:center;overflow:hidden;';
+  
   const title=document.createElement('div');
   title.style.cssText='font-size:17px;font-weight:600;color:var(--t);';
   title.textContent=hint||'Ketik';
+  
   const inp=document.createElement(isNote?'textarea':'input');
-  inp.style.cssText=`width:100%;padding:12px 14px;border-radius:12px;border:0.5px solid var(--sep);background:var(--inp);color:var(--t);font-size:16px;font-family:inherit;outline:none;resize:none;${isNote?'min-height:100px;':''}`;
+  inp.setAttribute('autocapitalize', 'sentences');
+  inp.style.cssText=`width:100%;padding:14px;border-radius:12px;border:0.5px solid var(--sep2);background:var(--inp);color:var(--t);font-size:16px;font-family:inherit;outline:none;resize:none;${isNote?'min-height:100px;':''}`;
   inp.value=curVal;
   if(maxLen)inp.maxLength=maxLen;
   inp.placeholder=isNote?'Tulis catatan…':'Ketik di sini…';
+  
   const btnRow=document.createElement('div');
-  btnRow.style.cssText='display:flex;gap:10px;justify-content:flex-end;';
+  btnRow.style.cssText='display:flex;border-top:0.5px solid var(--sep);margin:0 -24px;';
+  
   const btnCancel=document.createElement('button');
   btnCancel.textContent='Batal';
-  btnCancel.style.cssText='padding:10px 20px;border-radius:12px;border:none;background:var(--inp);color:var(--t);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;';
+  btnCancel.style.cssText='flex:1;padding:16px;border:none;background:transparent;color:var(--red);font-size:17px;font-weight:400;cursor:pointer;font-family:inherit;border-right:0.5px solid var(--sep);';
+  
   const btnSave=document.createElement('button');
   btnSave.textContent=isNote?'Kirim':'Simpan';
-  btnSave.style.cssText='padding:10px 20px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;';
+  btnSave.style.cssText='flex:1;padding:16px;border:none;background:transparent;color:var(--accent);font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;';
+  
   const doSave=()=>{
     const val=inp.value.trim();
     ov.remove();
-    // Simulasi ckbDone dengan nilai dari input
     ckbCtx=ctx;ckbValue=val;ckbMaxLen=maxLen||60;
     ckbDone();
     ckbCtx=null;
   };
-  btnCancel.onclick=()=>ov.remove();
+  
+  btnCancel.onclick=()=>{ ov.remove(); };
   btnSave.onclick=doSave;
+  
   inp.addEventListener('keydown',e=>{
     if(!isNote&&e.key==='Enter'){e.preventDefault();doSave();}
     if(e.key==='Escape'){e.preventDefault();ov.remove();}
   });
+  
   btnRow.appendChild(btnCancel);
   btnRow.appendChild(btnSave);
   box.appendChild(title);
@@ -3022,7 +3074,9 @@ function _openDesktopInput(ctx, hint, maxLen){
   ov.appendChild(box);
   ov.onclick=e=>{if(e.target===ov)ov.remove();};
   document.body.appendChild(ov);
-  setTimeout(()=>inp.focus(),50);
+  
+  // Memberikan delay kecil agar DOM siap dan focus memicu keyboard bawaan
+  setTimeout(()=>inp.focus(), 100);
 }
 function _ckbSystemKey(e){
   if(!ckbCtx)return;
@@ -3616,8 +3670,10 @@ function calGoToday() {
   calShowDay(calSelDate);
   if(typeof haptic === 'function') haptic(15);
 }
-/* --- AUTO REFRESH TIAP 15 DETIK & REALTIME SYNC --- */
+/* --- AUTO REFRESH & REALTIME SYNC --- */
 let _isAutoSyncing = false;
+// Jeda diubah menjadi 5 menit (300000ms) agar aplikasi SANGAT RINGAN dan tidak lag.
+// Tidak perlu refresh 15 detik karena Supabase Realtime sudah otomatis menarik data baru.
 setInterval(async () => {
   if(!curUser || _isAutoSyncing) return;
   if(ckbCtx || document.querySelector('.ov.on')) return;
@@ -3629,7 +3685,7 @@ setInterval(async () => {
     console.error("Auto-sync error", e);
   }
   _isAutoSyncing = false;
-}, 15000); // Refresh stabil tiap 15 detik untuk keamanan limit
+}, 300000);
 
 // Fungsi Supabase Realtime (Otomatis deteksi data masuk dari HP/PC lain)
 let _realtimeChannel = null;
