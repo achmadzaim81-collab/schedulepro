@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -896,7 +897,8 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 .sh-h { display:none; }
 .sh-title { font-size:17px; font-weight:600; color:var(--t); margin-bottom:4px; }
 .sh-sub { font-size:13px; color:var(--t2); margin-bottom:18px; line-height:1.4; }
-.add-form-inner { text-align:left; display:flex; flex-direction:column; gap:12px; margin-bottom:20px; }
+.add-form-inner { text-align:left; display:flex; flex-direction:column; gap:12px; margin-bottom:20px; max-height:50vh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:10px; }
+.add-form-inner::-webkit-scrollbar { display:none; }
 .add-native-row { display:flex; gap:10px; }
 .add-form-field { display:flex; flex-direction:column; gap:5px; }
 .add-form-lbl { font-size:11px; font-weight:600; color:var(--t2); letter-spacing:0.05em; text-transform:uppercase; padding-left:4px; }
@@ -1166,7 +1168,8 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 .ios-sheet-icon { display:none; }
 .ios-form-sheet .sh-title { font-size:15px; font-weight:600; color:var(--t); margin-bottom:0; }
 .ios-form-sheet .sh-sub { display:none; }
-.ios-form-body { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+.ios-form-body { padding:12px 14px; display:flex; flex-direction:column; gap:10px; max-height:50vh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:10px; }
+.ios-form-body::-webkit-scrollbar { display:none; }
 .ios-time-name-row { display:flex; align-items:stretch; gap:8px; height:40px; }
 .ios-time-pill { display:flex; align-items:center; justify-content:center; background:var(--inp); border:0.5px solid var(--sep2); border-radius:10px; padding:0 12px; min-width:64px; cursor:pointer; transition:background 0.12s; flex-shrink:0; }
 .ios-time-pill:active { background:var(--inp-f); }
@@ -1575,6 +1578,10 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
         <span class="popt-ico">☀️</span>
         <div><div class="popt-t">Hari Ini Saja</div><div class="popt-s">Hilang otomatis besok</div></div>
       </button>
+      <button class="popt task-opt" onclick="confirmDailyPerm('task')">
+        <span class="popt-ico">📋</span>
+        <div><div class="popt-t">Sebagai Tugas</div><div class="popt-s">Terus muncul tiap hari sampai dicentang selesai</div></div>
+      </button>
       <button class="popt daily-opt" onclick="confirmDailyPerm('tomorrow')">
         <span class="popt-ico">🌙</span>
         <div><div class="popt-t">Hari Esok</div><div class="popt-s">Masuk jadwal besok saja</div></div>
@@ -1682,7 +1689,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
   </div>
 </div>
 
-<div class="ov" id="moInfo" onclick="if(event.target===this)closeMo('moInfo')">
+<div class="ov" id="moInfo" style="z-index: 3000; backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);" onclick="if(event.target===this)closeMo('moInfo')">
   <div class="sh"><div class="sh-h"></div><div class="sh-title" id="moInfoT"></div><div id="moInfoB" style="font-size:14px;color:var(--t);margin-bottom:16px;"></div><button class="btn-cl" onclick="closeMo('moInfo')">Tutup</button></div>
 </div>
 
@@ -1727,6 +1734,38 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
         <div class="add-form-lbl">Nama Kegiatan</div>
         <div class="time-tap" id="editLabelTap" onclick="openCKB('editLabel','Kegiatan',60)">
           <span class="time-tap-val empty" id="editLabelTapVal">Nama kegiatan…</span>
+        </div>
+      </div>
+      <div class="add-form-field" id="editSifatField" style="display:none; margin-bottom: 4px;">
+        <div class="add-form-lbl">Sifat Tugas</div>
+        <style>
+          /* UI Dibuat lebih ringkas agar pas di semua device */
+          .sf-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:2px; width:100%; box-sizing:border-box; }
+          .sf-card { position:relative; background:var(--inp); border:1.5px solid var(--sep2); border-radius:12px; padding:12px 6px; cursor:pointer; transition:0.2s; text-align:center; box-sizing:border-box; min-width:0; }
+          .sf-card.on { background:var(--bg-secondary); border-color:var(--accent); box-shadow:0 4px 10px var(--accent-glow); }
+          .sf-card.on .sf-title { color:var(--accent); }
+          .sf-info-btn { position:absolute; top:4px; left:4px; color:var(--t2); font-size:11px; width:20px; height:20px; border:1.5px solid var(--t2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:serif; font-style:italic; font-weight:bold; transition:0.2s; z-index:1; }
+          .sf-info-btn:active { transform:scale(0.85); background:var(--t2); color:var(--bg); }
+          .sf-card.on .sf-info-btn { color:var(--accent); border-color:var(--accent); }
+          .sf-title { font-size:12px; font-weight:600; color:var(--t2); margin-top:8px; transition:0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        </style>
+        <div class="sf-grid">
+          <div class="sf-card" id="esToday" onclick="setEditSifat('today')">
+            <div class="sf-info-btn" onclick="showSifatInfo(event, 'today')">i</div>
+            <div class="sf-title">Hari Ini</div>
+          </div>
+          <div class="sf-card" id="esTomorrow" onclick="setEditSifat('tomorrow')">
+            <div class="sf-info-btn" onclick="showSifatInfo(event, 'tomorrow')">i</div>
+            <div class="sf-title">Esok Hari</div>
+          </div>
+          <div class="sf-card" id="esTask" onclick="setEditSifat('task')">
+            <div class="sf-info-btn" onclick="showSifatInfo(event, 'task')">i</div>
+            <div class="sf-title">Tugas</div>
+          </div>
+          <div class="sf-card" id="esPerm" onclick="setEditSifat('perm')">
+            <div class="sf-info-btn" onclick="showSifatInfo(event, 'perm')">i</div>
+            <div class="sf-title">Permanen</div>
+          </div>
         </div>
       </div>
             <div class="add-form-field">
@@ -1855,7 +1894,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 <div id="toast"></div>
 
 <div class="ov" id="moDeskItemMenu" onclick="if(event.target===this)closeMo('moDeskItemMenu')">
-  <div class="sh ios-actionsheet" style="max-width:300px; border-radius:16px; margin:auto; top:50%; transform:translateY(-50%) scale(0.9); position:relative;">
+  <div class="sh" style="padding:0; overflow:hidden; max-width:280px; text-align:center;">
     <button class="ios-as-item" onclick="closeMo('moDeskItemMenu'); if(window._curDeskEdit) window._curDeskEdit();">Edit</button>
     <button class="ios-as-item destructive" onclick="closeMo('moDeskItemMenu'); if(window._curDeskDel) window._curDeskDel();">Hapus</button>
     <div style="height:8px;background:var(--sep)"></div>
@@ -2048,6 +2087,44 @@ function toggleEditPriority(){
   const btn = document.getElementById('editPrioUrgent');
   if(btn) btn.classList.toggle('on', editPriorityValue === 'urgent');
   haptic(8);
+}
+
+// Pengendali Sifat Tugas & Info Popup
+let editSifatValue = 'today';
+function setEditSifat(val) {
+  editSifatValue = val;
+  const ids = ['esToday', 'esTomorrow', 'esTask', 'esPerm'];
+  const vals = ['today', 'tomorrow', 'task', 'perm'];
+  ids.forEach((id, index) => {
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('on', val === vals[index]);
+  });
+  haptic(10);
+}
+
+function showSifatInfo(event, type) {
+  event.stopPropagation(); // Mencegah klik menembus ke kotak (mencegah aktifasi)
+  haptic(10);
+  let title = "";
+  let desc = "";
+  
+  if(type === 'today') {
+    title = "Hari Ini Saja";
+    desc = "Ketika di aktifkan, maka tugas ini hanya muncul hari ini saja dan tidak akan muncul di hari setelahnya.";
+  } else if(type === 'tomorrow') {
+    title = "Esok Hari";
+    desc = "Ketika di aktifkan maka tugas ini akan muncul esok hari saja dan hilang otomatis pada lusa.";
+  } else if(type === 'task') {
+    title = "Sebagai Tugas";
+    desc = "Ketika di aktifkan maka tercatat sebagai tugas yang harus di selesaikan, tidak akan hilang sebelum anda menyelesaikannya, ketika anda sudah menyelesaikannya maka tugas ini akan hilang esok hari.";
+  } else if(type === 'perm') {
+    title = "Permanen";
+    desc = "Ketika di aktifkan maka tugas ini akan muncul setiap hari dan ketika anda menyelesaikan tugas ini, tugas ini akan muncul lagi esok hari sebagai tugas yang belum terselesaikan.";
+  }
+  
+  document.getElementById('moInfoT').textContent = title;
+  document.getElementById('moInfoB').textContent = desc;
+  openMo('moInfo');
 }
 
 function priorityLabel(p){
@@ -2301,7 +2378,7 @@ async function loadAll(){
   if(!curUser)return;setSyncState('ing');
   try{
     const[{data:dRows},{data:wRows},{data:mRows},{data:prefData}]=await withTimeout(Promise.all([
-      sb.from('daily_items').select('*').eq('user_id',curUser.id).eq('date', getLocalDate()).order('time'),
+      sb.from('daily_items').select('*').eq('user_id',curUser.id).or(`date.eq.${getLocalDate()},and(is_task.eq.true,is_completed.eq.false)`).order('time'),
       sb.from('weekly_items').select('*').eq('user_id',curUser.id),
       sb.from('monthly_items').select('*').eq('user_id',curUser.id),
       sb.from('user_preferences').select('*').eq('user_id', curUser.id).maybeSingle()
@@ -2336,9 +2413,9 @@ async function syncWeeklyToDaily(){
   // Penggabungan jadwal mingguan ke harian sekarang dilakukan secara dinamis (langsung di layar).
 }
 
-async function saveDaily(item){if(!curUser)return null;setSyncState('ing');const{data,error}=await sb.from('daily_items').insert({user_id:curUser.id,time:item.time,label:item.label,cat:item.cat||null,priority:item.priority||'normal',deadline:item.deadline||null,date:getLocalDate()}).select().single();if(error){setSyncState('err');return null}setSyncState('ok');return data.id}
+async function saveDaily(item){if(!curUser)return null;setSyncState('ing');const{data,error}=await sb.from('daily_items').insert({user_id:curUser.id,time:item.time,label:item.label,cat:item.cat||null,priority:item.priority||'normal',deadline:item.deadline||null,date:getLocalDate(),is_task:item.is_task||false,is_completed:false}).select().single();if(error){setSyncState('err');return null}setSyncState('ok');return data.id}
 async function deleteDaily(dbId){setSyncState('ing');await sb.from('daily_items').delete().eq('id',dbId);setSyncState('ok')}
-async function updateDailyDB(dbId,time,label,priority,deadline){setSyncState('ing');const{error}=await sb.from('daily_items').update({time,label,priority,deadline}).eq('id',dbId);if(error){setSyncState('err');return false}setSyncState('ok');return true}
+async function updateDailyDB(dbId,time,label,priority,deadline,is_task){setSyncState('ing');const payload={time,label,priority,deadline,date:getLocalDate()};if(is_task!==undefined)payload.is_task=is_task;const{error}=await sb.from('daily_items').update(payload).eq('id',dbId);if(error){setSyncState('err');return false}setSyncState('ok');return true}
 async function saveWeekly(item){if(!curUser)return null;setSyncState('ing');const{data,error}=await sb.from('weekly_items').insert({user_id:curUser.id,day:selDay,time:item.time,label:item.label,perm:item.perm,daily_repeat:item.daily_repeat||false,week_added:THIS_WEEK,cat:item.cat||null,priority:item.priority||'normal',deadline:item.deadline||null}).select().single();if(error){setSyncState('err');return null}setSyncState('ok');return data.id}
 async function deleteWeekly(dbId){setSyncState('ing');await sb.from('weekly_items').delete().eq('id',dbId);setSyncState('ok')}
 async function updateWeeklyDB(dbId,time,label,priority,deadline){setSyncState('ing');const{error}=await sb.from('weekly_items').update({time,label,priority,deadline}).eq('id',dbId);if(error){setSyncState('err');return false}setSyncState('ok');return true}
@@ -2435,8 +2512,8 @@ async function confirmDailyPerm(type){
     return;
   }
 
-  // today atau perm: simpan ke daily hari ini
-  const item={time,label,cat,priority,deadline};
+  // today, perm, atau task: simpan ke daily hari ini
+  const item={time,label,cat,priority,deadline, is_task: type==='task'};
   const dbId=await saveDaily(item);
   if(dbId){
     item.id=dbId;item.dbId=dbId;item.dailyPerm=(type==='perm');
@@ -2560,6 +2637,18 @@ function showUndoToast(msg,onUndo){
 } 
 function openEdit(item,type){
   editTarget={item,type};
+  
+  // Tampilkan pilihan Sifat Tugas hanya jika yang diedit adalah jadwal harian
+  const esField = document.getElementById('editSifatField');
+  if(esField) {
+    if(type === 'daily') {
+      esField.style.display = 'flex';
+      setEditSifat(item.is_task ? 'task' : 'today');
+    } else {
+      esField.style.display = 'none';
+    }
+  }
+
   editTimeValue=item.time||'';
   const tv=document.getElementById('editTimeTapVal');
   if(tv){if(editTimeValue){tv.textContent=editTimeValue;tv.classList.remove('empty')}else{tv.textContent='--:--';tv.classList.add('empty')}}
@@ -2598,12 +2687,46 @@ async function execEdit(){
   const{item,type}=editTarget;editTarget=null;
 
   if(type==='daily'){
-    const ok=await updateDailyDB(item.dbId,newTime,newLabel,newPrio,newDeadline);
-    if(ok){
-      item.time=newTime; item.label=newLabel; item.priority=newPrio; item.deadline=newDeadline;
-      daily.sort((a,b)=>a.time.localeCompare(b.time));
-      renderDaily();
-      showToast('Diperbarui');
+    if (editSifatValue === 'perm') {
+      // Ubah dari harian jadi permanen (migrasi data otomatis ke mingguan)
+      await deleteDaily(item.dbId);
+      daily = daily.filter(i => i.dbId !== item.dbId);
+      const todayKey = KEYS[(new Date().getDay()+6)%7];
+      const wItem = {time: newTime, label: newLabel, cat: item.cat, priority: newPrio, deadline: newDeadline, perm: true, daily_repeat: false, week_added: THIS_WEEK};
+      const newId = await saveWeekly(wItem);
+      if(newId){
+        wItem.id = newId; wItem.dbId = newId;
+        if(!weekly[todayKey]) weekly[todayKey] = [];
+        weekly[todayKey].push(wItem);
+        weekly[todayKey].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      }
+      showToast('Diubah jadi Permanen ✓');
+      renderDaily(); renderWeekly(); updatePD();
+    } else if (editSifatValue === 'tomorrow') {
+      // Pindah ke esok hari (migrasi data 1x ke mingguan khusus besok)
+      await deleteDaily(item.dbId);
+      daily = daily.filter(i => i.dbId !== item.dbId);
+      const tomorrowKey = KEYS[(new Date().getDay()+6+1)%7]; // Ambil indeks hari besok
+      const wItem = {time: newTime, label: newLabel, cat: item.cat, priority: newPrio, deadline: newDeadline, perm: false, daily_repeat: false, week_added: THIS_WEEK};
+      const newId = await saveWeekly(wItem);
+      if(newId){
+        wItem.id = newId; wItem.dbId = newId;
+        if(!weekly[tomorrowKey]) weekly[tomorrowKey] = [];
+        weekly[tomorrowKey].push(wItem);
+        weekly[tomorrowKey].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      }
+      showToast('Dipindah ke Esok Hari ✓');
+      renderDaily(); renderWeekly(); updatePD();
+    } else {
+      // Update data harian jika hanya ubah jadi Tugas / Hari ini
+      const isTask = (editSifatValue === 'task');
+      const ok=await updateDailyDB(item.dbId,newTime,newLabel,newPrio,newDeadline, isTask);
+      if(ok){
+        item.time=newTime; item.label=newLabel; item.priority=newPrio; item.deadline=newDeadline; item.is_task=isTask;
+        daily.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+        renderDaily();
+        showToast('Diperbarui ✓');
+      }
     }
   } else if(type==='monthly'){
     item.time=newTime; item.label=newLabel; item.priority=newPrio; item.deadline=newDeadline;
@@ -2652,7 +2775,16 @@ function renderDaily(){
     if(!already) combinedDaily.push({...w, is_from_weekly: true});
     else already.is_from_weekly = true;
   });
-  combinedDaily.sort((a,b)=>a.time.localeCompare(b.time));
+
+  // INJEKSI OTOMATIS: Jadwal Bulanan ke Harian
+  const monthlyToday = monthlyData.filter(m => m.date === TODAY_KEY);
+  monthlyToday.forEach(m => {
+    const already = combinedDaily.find(d => d.label === m.label && d.time === m.time);
+    if(!already) combinedDaily.push({...m, is_from_monthly: true, dbId: m.id});
+    else already.is_from_monthly = true;
+  });
+
+  combinedDaily.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
 
   const filtered=q?combinedDaily.filter(it=>it.label.toLowerCase().includes(q)||(getCat(it.cat).name||'').toLowerCase().includes(q)):combinedDaily;
   const show=filtered.length>0;
@@ -2672,11 +2804,19 @@ function renderDaily(){
     if(timeStr){ const [hh,m] = timeStr.split(':'); h=parseInt(hh); h12=h%12||12; mm=m; }
     const card=mkItem({h12,mm,per:timeStr?period(h):'',label:it.label,cat:it.cat,perm:false,showPerm:false,delay:i*.03,dbId:it.dbId,priority:it.priority,deadline:it.deadline,
           is_from_weekly: it.is_from_weekly,
+          is_from_monthly: it.is_from_monthly,
+          is_task: it.is_task,
           onDel:()=>confirmDel(it,'daily'),onEdit:()=>openEdit(it,'daily'),
       onTap:()=>{
         const sblm=isDone(it.dbId);
         toggleDone(it.dbId);
         updateStats();
+        // Update status ke cloud jika ini adalah 'Tugas'
+        if(it.is_task) {
+          const isNowDone = !sblm;
+          it.is_completed = isNowDone;
+          sb.from('daily_items').update({is_completed: isNowDone}).eq('id', it.dbId).then();
+        }
         if(!sblm){
           _flashDone(card.outer,true);
           setTimeout(()=>{
@@ -2700,12 +2840,34 @@ function renderDaily(){
   if(vt)vt.style.display=daily.length>0?'flex':'none';
   if(_dailyView==='timeline')renderTimeline();
 } 
+// Fungsi pintar untuk mencari tanggal pasti di minggu ini
+function getDateForCurrentWeek(dayKey) {
+  const idx = KEYS.indexOf(dayKey);
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+  const target = new Date(now.setDate(diffToMonday));
+  target.setDate(target.getDate() + idx);
+  return target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0') + '-' + String(target.getDate()).padStart(2,'0');
+}
+
 function renderWeekly(){
   const list=document.getElementById('wList'),emp=document.getElementById('wEmp'),sec=document.getElementById('wSec');
   list.querySelectorAll('[data-has-cleanup]').forEach(el=>{if(el._cleanupDocTouch)el._cleanupDocTouch();});
   list.innerHTML='';
   const q=searchQ['w'];
-  const items=weekly[selDay]||[];
+  
+  let items=[...(weekly[selDay]||[])];
+  
+  // INJEKSI OTOMATIS: Jadwal Bulanan ke Mingguan
+  const targetDate = getDateForCurrentWeek(selDay);
+  const monthlyForThisDay = monthlyData.filter(m => m.date === targetDate);
+  monthlyForThisDay.forEach(m => {
+    const already = items.find(w => w.label === m.label && w.time === m.time);
+    if(!already) items.push({...m, is_from_monthly: true, dbId: m.id});
+  });
+  items.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+
   const filtered=q?items.filter(it=>it.label.toLowerCase().includes(q)||(getCat(it.cat).name||'').toLowerCase().includes(q)):items;
   const show=filtered.length>0;
   emp.style.display=show?'none':'block';sec.style.display=items.length>0?'block':'none';
@@ -2714,14 +2876,15 @@ function renderWeekly(){
     let h12='--', mm='--', h=0;
     if(timeStr){ const [hh,m] = timeStr.split(':'); h=parseInt(hh); h12=h%12||12; mm=m; }
     const card=mkItem({h12,mm,per:timeStr?period(h):'',label:it.label,cat:it.cat,perm:it.perm,showPerm:true,delay:i*.03,dbId:it.dbId,priority:it.priority,deadline:it.deadline,
+      is_from_monthly: it.is_from_monthly,
       onDel:()=>confirmDel(it,'weekly'),onEdit:()=>openEdit(it,'weekly'),
-      onTap:()=>openTaskModal(it),
+      onTap:()=> !it.is_from_monthly ? openTaskModal(it) : null,
       isWeekly:true});
     list.appendChild(card.outer);
   });
 }
 
-function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTap,isWeekly,priority,deadline, is_from_weekly}){
+function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTap,isWeekly,priority,deadline, is_from_weekly, is_from_monthly, is_task}){
   const outer=document.createElement('div');outer.style.position='relative';outer.style.overflow='hidden';outer.style.borderRadius='16px';outer.style.marginBottom='10px';outer.dataset.hasCleanup='1';
   const catInfo=getCat(cat);const catColor=catInfo.color||'#888';
   const hasTasks=isWeekly&&hasTasksForItem(dbId);
@@ -2731,7 +2894,11 @@ function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTa
   actions.className='swipe-actions';
   actions.style.cssText='position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;padding-right:16px;z-index:0;gap:12px;';
   
-  if (is_from_weekly) {
+  if (is_from_monthly) {
+    const infoBtn=document.createElement('button');infoBtn.innerHTML='<span style="font-size:13px;color:var(--t2);font-weight:600">Edit/Hapus dari<br>tab Bulanan</span>';
+    infoBtn.style.cssText='background:transparent;border:none;text-align:right;';
+    actions.appendChild(infoBtn);
+  } else if (is_from_weekly) {
     const infoBtn=document.createElement('button');infoBtn.innerHTML='<span style="font-size:13px;color:var(--t2);font-weight:600">Edit/Hapus dari<br>tab Mingguan</span>';
     infoBtn.style.cssText='background:transparent;border:none;text-align:right;';
     actions.appendChild(infoBtn);
@@ -2761,6 +2928,8 @@ function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTa
   const dlHtml=dl?`<div class="deadline-txt${dl.overdue?' overdue':''}">${dl.overdue?'⚠️ ':'📅 '}${dl.text}</div>`:'';
   let taskInfo = hasTasks ? `<div style="display:inline-block; font-size:11px; color:var(--accent); background:var(--accent-glass); padding:4px 8px; border-radius:8px; font-weight:600; margin-top:6px;">📋 Ada Tugas</div>` : '';
   let weeklyBadge = is_from_weekly ? `<span class="priority-badge" style="background:var(--accent-glass); color:var(--accent); margin-top:4px;">🔄 Task Mingguan</span>` : '';
+  let monthlyBadge = is_from_monthly ? `<span class="priority-badge" style="background:rgba(255,159,10,0.15); color:#ff9f0a; margin-top:4px;">🗓 Dari Bulanan</span>` : '';
+  let taskTypeBadge = is_task ? `<span class="priority-badge" style="background:rgba(48,209,88,0.15); color:#30d158; margin-top:4px;">📋 Tugas</span>` : '';
 
   inner.innerHTML=`
     <div class="i-left">
@@ -2769,11 +2938,11 @@ function mkItem({h12,mm,per,label,cat,perm,showPerm,delay,dbId,onDel,onEdit,onTa
     </div>
     <div class="i-body">
       <div class="i-lbl">${esc(label)}</div>
-      ${prioHtml}${dlHtml}${taskInfo}${weeklyBadge}
+      ${prioHtml}${dlHtml}${taskInfo}${weeklyBadge}${monthlyBadge}${taskTypeBadge}
     </div>
   `;
 
-  if (isDesktop() && !is_from_weekly && !done) {
+  if (isDesktop() && !is_from_weekly && !is_from_monthly && !done) {
     const dBtn = document.createElement('button');
     dBtn.className = 'desk-menu-btn';
     dBtn.innerHTML = '⋮';
@@ -3378,6 +3547,14 @@ function renderTimeline(){
     else already.is_from_weekly = true;
   });
 
+  // INJEKSI OTOMATIS: Jadwal Bulanan ke Timeline
+  const monthlyToday = monthlyData.filter(m => m.date === TODAY_KEY);
+  monthlyToday.forEach(m => {
+    const already = combinedDaily.find(d => d.label === m.label && d.time === m.time);
+    if(!already) combinedDaily.push({...m, is_from_monthly: true, dbId: m.id});
+    else already.is_from_monthly = true;
+  });
+
   const filtered=q?combinedDaily.filter(it=>it.label.toLowerCase().includes(q)||(getCat(it.cat).name||'').toLowerCase().includes(q)):combinedDaily;
   if(!filtered.length)return;
 
@@ -3480,6 +3657,22 @@ function renderTimeline(){
       weeklyChip.textContent='🔄 Task Mingguan';
       meta.appendChild(weeklyChip);
     }
+    if(it.is_from_monthly){
+      const monthlyChip=document.createElement('span');
+      monthlyChip.className='timeline-card-cat'; 
+      monthlyChip.style.background='rgba(255,159,10,0.15)';
+      monthlyChip.style.color='#ff9f0a';
+      monthlyChip.textContent='🗓 Dari Bulanan';
+      meta.appendChild(monthlyChip);
+    }
+    if(it.is_task){
+      const taskTypeChip=document.createElement('span');
+      taskTypeChip.className='timeline-card-cat'; 
+      taskTypeChip.style.background='rgba(48,209,88,0.15)';
+      taskTypeChip.style.color='#30d158';
+      taskTypeChip.textContent='📋 Tugas';
+      meta.appendChild(taskTypeChip);
+    }
 
       card.appendChild(bar);
       card.appendChild(title);
@@ -3490,6 +3683,12 @@ function renderTimeline(){
         const sblm=isDone(it.dbId);
         toggleDone(it.dbId);
         updateStats();
+        // Update status ke cloud jika ini adalah 'Tugas'
+        if(it.is_task) {
+          const isNowDone = !sblm;
+          it.is_completed = isNowDone;
+          sb.from('daily_items').update({is_completed: isNowDone}).eq('id', it.dbId).then();
+        }
         if(!sblm){
           _flashDone(card,true);
           setTimeout(()=>renderTimeline(),900);
