@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -301,27 +300,14 @@ input, button, textarea, select {
 :root.light .priority-urgent { background:rgba(255,59,48,0.12); color:#ff3b30; }
 :root.light .priority-normal { background:rgba(0,122,255,0.1); color:#007aff; }
 :root.light .priority-low { background:rgba(52,199,89,0.1); color:#34c759; }
+@keyframes pulse-deadline { 0% { opacity: 1; text-shadow: 0 0 10px rgba(255,69,58,0.8); } 50% { opacity: 0.5; text-shadow: 0 0 2px rgba(255,69,58,0.2); } 100% { opacity: 1; text-shadow: 0 0 10px rgba(255,69,58,0.8); } }
 .deadline-txt { font-size:11px; color:var(--t2); margin-top:2px; }
-.deadline-txt.overdue { color:#ff453a; font-weight:600; }
-.priority-pill-btn {
-  flex:1; padding:8px 4px; border-radius:10px; border:1.5px solid transparent;
-  font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
-  background:var(--inp); color:var(--t2); transition:0.15s;
-}
+.deadline-txt.overdue { color:#ff453a; font-weight:700; animation: pulse-deadline 1.5s infinite; }
+.priority-pill-btn { flex:none; display:inline-block; padding:10px 20px; border-radius:12px; border:1.5px solid transparent; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; background:var(--inp); color:var(--t2); transition:0.15s; }
 .priority-pill-btn.on.priority-urgent { background:rgba(255,69,58,0.15); color:#ff453a; border-color:#ff453a; }
 .priority-pill-btn.on.priority-normal { background:rgba(10,132,255,0.12); color:#0a84ff; border-color:#0a84ff; }
 .priority-pill-btn.on.priority-low { background:rgba(48,209,88,0.12); color:#30d158; border-color:#30d158; }
-.skeleton { border-radius:20px; background:var(--cd); overflow:hidden; position:relative; height:72px; margin-bottom:10px; }
-.skeleton::after {
-  content:''; position:absolute; inset:0;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
-  animation:sk-shimmer 1.4s ease infinite;
-  background-size:200% 100%;
-}
-:root.light .skeleton::after {
-  background:linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.06) 50%, transparent 100%);
-  background-size:200% 100%;
-}
+.skeleton { border-radius:12px; background:linear-gradient(90deg, var(--inp) 25%, var(--inp-f) 50%, var(--inp) 75%); background-size:400% 100%; animation:sk-shimmer 1.2s ease-in-out infinite; overflow:hidden; position:relative; height:64px; margin-bottom:10px; }
 @keyframes sk-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .wrap { position:absolute; inset:0 0 var(--nb-h) 0; overflow:hidden; }
 .nav-bar {
@@ -362,11 +348,9 @@ input, button, textarea, select {
 .page::-webkit-scrollbar { width:0px; }
 
 /* ══════════════════════════════════
-   TOP BAR
+   SECTION LABEL & LIST
    ══════════════════════════════════ */
-.topbar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:22px; }
-.hdr-s { font-size:12px; font-weight:600; color:var(--t2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:3px; }
-.hdr-t { font-size:34px; font-weight:700; letter-spacing:-1px; color:var(--t); transition:font-size 0.2s ease, letter-spacing 0.2s ease; }
+.sl { font-size:12px; font-weight:600; text-transform:uppercase; color:var(--t2); margin-bottom:8px; padding-left:6px; letter-spacing:0.06em; }
 
 /* Sticky header on scroll */
 .page-sticky-hdr {
@@ -531,57 +515,28 @@ input, button, textarea, select {
    SEARCH
    ══════════════════════════════════ */
 .search-wrap { position:relative; margin-bottom:18px; }
-.search-ico { position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.4; font-size:15px; }
-.search-inp {
-  width:100%; padding:10px 12px 10px 36px;
-  border-radius:12px; border:0.5px solid var(--sep2);
-  background:var(--inp); font-size:16px; color:var(--t);
-  outline:none; font-family:inherit;
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-}
-.search-inp:focus { border-color:var(--accent); background:var(--inp-f); }
-.search-inp::placeholder { color:var(--t2); }
-.search-clear { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:var(--t2); color:var(--bg); border:none; border-radius:50%; width:17px; height:17px; font-size:9px; display:none; align-items:center; justify-content:center; cursor:pointer; }
+.search-ico { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:rgba(235,235,245,0.6); font-size:16px; }
+.search-inp { width:100%; padding:8px 12px 8px 32px; border-radius:10px; border:none; background:rgba(118,118,128,0.24); font-size:17px; color:var(--t); outline:none; font-family:inherit; }
+.search-inp:focus { background:rgba(118,118,128,0.32); }
+.search-inp::placeholder { color:rgba(235,235,245,0.6); }
+.search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:rgba(235,235,245,0.3); color:#000; border:none; border-radius:50%; width:16px; height:16px; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; }
 .search-clear.show { display:flex; }
 
 /* ══════════════════════════════════
-   FAB & QUICK NOTE CARD
+   FAB & QUICK NOTE CARD (iOS Widget Style)
    ══════════════════════════════════ */
 .fab-wrap { display:flex; justify-content:flex-end; margin-bottom:16px; gap:10px; align-items:center; }
-.fab {
-  width:46px; height:46px; border-radius:23px;
-  background:var(--accent); color:#fff; font-size:24px; border:none;
-  box-shadow:0 4px 16px var(--accent-glow);
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; transition:transform 0.15s cubic-bezier(.34,1.56,.64,1), opacity 0.15s;
-}
-.fab:active { transform:scale(0.92); opacity:0.85; }
-.fab.is-open { transform:rotate(45deg); background:var(--red); box-shadow:0 4px 16px rgba(255,69,58,0.4); }
-.fab.is-open:active { transform:rotate(45deg) scale(0.92); }
-.fab-note { background:var(--cd); color:var(--t2); box-shadow:var(--sh-card); }
-.fab-note:active { opacity:0.7; }
+.fab { width:44px; height:44px; border-radius:22px; background:var(--accent); color:#fff; font-size:26px; font-weight:300; border:none; box-shadow:0 4px 12px var(--accent-glow); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.fab:active { transform:scale(0.85); opacity:0.9; }
+.fab.is-open { transform:rotate(135deg) scale(0.95); background:var(--red); box-shadow:0 4px 12px rgba(255,69,58,0.4); color:#fff; }
 
 /* Quick Note Card */
-.quick-note-card {
-  flex:1; display:flex; align-items:center; gap:12px;
-  padding:13px 15px; background:var(--cd);
-  border-radius:18px; border:0.5px solid var(--cd-b);
-  box-shadow:var(--sh-card); cursor:pointer;
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-  transition:transform 0.15s cubic-bezier(.34,1.56,.64,1), opacity 0.15s;
-  min-height:52px;
-}
-.quick-note-card:active { transform:scale(0.97); opacity:0.8; }
-.quick-note-card-icon {
-  width:34px; height:34px; border-radius:10px;
-  background:var(--accent-glass);
-  border:0.5px solid var(--accent-glow);
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; color:var(--accent);
-}
-.quick-note-card-text { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
-.quick-note-card-title { font-size:14px; font-weight:600; color:var(--t); }
-.quick-note-card-sub { font-size:12px; color:var(--t2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.quick-note-card { flex:1; display:flex; align-items:center; gap:12px; padding:10px 14px; background:#1C1C1E; border-radius:12px; border:none; box-shadow:none; cursor:pointer; transition:transform 0.15s cubic-bezier(.34,1.56,.64,1), background 0.15s; min-height:44px; }
+.quick-note-card:active { transform:scale(0.97); background:#2C2C2E; }
+.quick-note-card-icon { width:30px; height:30px; border-radius:8px; background:rgba(10,132,255,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--accent); }
+.quick-note-card-text { display:flex; flex-direction:column; gap:0; flex:1; min-width:0; }
+.quick-note-card-title { font-size:15px; font-weight:500; color:var(--t); letter-spacing:-0.2px; }
+.quick-note-card-sub { font-size:12px; color:rgba(235,235,245,0.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* ══════════════════════════════════
    SECTION LABEL & LIST
@@ -590,26 +545,20 @@ input, button, textarea, select {
 .list { display:flex; flex-direction:column; gap:10px; }
 
 /* ══════════════════════════════════
-   ITEM CARDS — iOS 26 style
+   ITEM CARDS — iOS Native 17 Style
    ══════════════════════════════════ */
-.item-swipe {
-  display:flex; align-items:center; padding:14px 16px; gap:14px;
-  background:var(--cd); border:0.5px solid var(--cd-b);
-  border-radius:20px; box-shadow:var(--sh-card);
-  cursor:pointer;
-  transition:transform 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.18s;
-}
-.item-swipe:active { transform:scale(0.97); opacity:0.85; }
+.item-swipe { display:flex; align-items:center; padding:12px 14px; gap:12px; background:#1C1C1E; border:none; border-radius:12px; box-shadow:none; cursor:pointer; transition:transform 0.18s cubic-bezier(0.4,0,0.2,1), background 0.18s, opacity 0.18s; }
+.item-swipe:active { transform:scale(0.98); background:#2C2C2E; opacity:1 !important; }
 .item-cat-bar { width:3px; height:30px; border-radius:2px; flex-shrink:0; }
-.i-left { display:flex; flex-direction:column; align-items:center; width:44px; flex-shrink:0; }
-.i-h { font-size:17px; font-weight:600; color:var(--t); letter-spacing:-0.3px; }
-.i-sub { font-size:11px; font-weight:500; color:var(--t2); text-transform:uppercase; margin-top:1px; letter-spacing:0.02em; }
+.i-left { display:flex; flex-direction:column; align-items:flex-end; width:52px; flex-shrink:0; text-align:right; border-right:1px solid rgba(255,255,255,0.1); padding-right:12px; }
+.i-h { font-size:15px; font-weight:600; color:var(--t); letter-spacing:-0.2px; font-variant-numeric:tabular-nums; }
+.i-sub { font-size:10px; font-weight:600; color:var(--accent); text-transform:uppercase; margin-top:2px; letter-spacing:0.02em; }
 .i-sep { display:none; }
-.i-body { flex:1; min-width:0; }
-.i-lbl { font-size:16px; font-weight:500; color:var(--t); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.i-body { flex:1; min-width:0; padding-left:2px; }
+.i-lbl { font-size:17px; font-weight:400; color:var(--t); letter-spacing:-0.4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .i-cat-lbl { font-size:12px; color:var(--t2); margin-top:2px; }
-.item-swipe.done { opacity:0.30; }
-.item-swipe.done .i-lbl { text-decoration:line-through; }
+.item-swipe.done { opacity:0.5; }
+.item-swipe.done .i-lbl { text-decoration:line-through; color:rgba(235,235,245,0.6); }
 .item-swipe.prio-urgent { background:rgba(255,69,58,0.13); border-color:rgba(255,69,58,0.35); box-shadow:0 0 0 0.5px rgba(255,69,58,0.3), 0 2px 12px rgba(255,69,58,0.15); }
 .item-swipe.prio-urgent .item-cat-bar { background:#ff453a !important; width:5px; box-shadow:0 0 8px rgba(255,69,58,0.6); }
 .item-swipe.prio-normal { background:rgba(10,132,255,0.10); border-color:rgba(10,132,255,0.2); }
@@ -851,26 +800,14 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 .empty-s { font-size:14px; color:var(--t2); }
 
 /* ══════════════════════════════════
-   PILLS — iOS Segmented Control
+   PILLS — Dynamic Rounded Calendar iOS
    ══════════════════════════════════ */
-.pills {
-  display:flex; background:var(--inp); border-radius:12px; padding:3px; margin-bottom:18px;
-  border:0.5px solid var(--sep2);
-}
-.pill {
-  flex:1; padding:7px 0; border-radius:9px;
-  font-size:13px; font-weight:600; text-align:center; color:var(--t2);
-  border:none; background:transparent; cursor:pointer;
-  display:flex; flex-direction:column; align-items:center; transition:color 0.2s;
-  font-family:inherit;
-}
-.pill.on {
-  background:var(--bg-secondary);
-  color:var(--t);
-  box-shadow:0 2px 8px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(255,255,255,0.08);
-}
+.pills { display:flex; background:var(--inp); border-radius:24px; padding:4px; margin-bottom:18px; border:0.5px solid var(--sep2); }
+.pill { flex:1; padding:8px 0; border-radius:20px; font-size:13px; font-weight:600; text-align:center; color:var(--t2); border:none; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1); font-family:inherit; }
+.pill.on { background:var(--accent); color:#fff; box-shadow:0 4px 12px var(--accent-glow); transform:scale(1.02); }
 .pdots { display:flex; gap:3px; margin-top:4px; min-height:4px; }
-.pdot { width:4px; height:4px; border-radius:50%; }
+.pdot { width:4px; height:4px; border-radius:50%; transition:background 0.2s; }
+.pill.on .pdot { background:#fff !important; opacity:0.8; }
 
 /* ══════════════════════════════════
    MODALS / OVERLAYS
@@ -1092,10 +1029,10 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
    NOTES — unchanged
    ══════════════════════════════════ */
 .notes-count{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px;padding-left:2px}
-.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(min-width:480px){.notes-grid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:768px){.notes-grid{grid-template-columns:repeat(2,1fr)}}
-.note-card{border-radius:20px;padding:14px 13px 38px 13px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:5px;background:var(--cd);border:0.5px solid var(--cd-b);box-shadow:var(--sh-card);transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,opacity .15s;animation:pop .22s cubic-bezier(.2,0,.2,1) both;overflow:hidden;min-height:90px;}
+.notes-grid{column-count:2;column-gap:10px;display:block;}
+@media(min-width:480px){.notes-grid{column-count:3}}
+@media(min-width:768px){.notes-grid{column-count:4}}
+.note-card{break-inside:avoid;margin-bottom:10px;border-radius:20px;padding:14px 13px 38px 13px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:5px;background:var(--cd);border:0.5px solid var(--cd-b);box-shadow:var(--sh-card);transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,opacity .15s;animation:pop .22s cubic-bezier(.2,0,.2,1) both;overflow:hidden;min-height:90px;}
 .note-card:active{transform:scale(.94);opacity:.85}
 .note-card-title{font-size:14px;font-weight:700;color:var(--t);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .note-card-title.empty{color:var(--t2);font-weight:400;font-style:italic}
@@ -1322,16 +1259,35 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
       <div class="page" id="pgMenu">
         <div class="page-sticky-hdr"></div>
-        <div class="topbar">
-          <div>
-            <div class="hdr-s">Pilih Tampilan</div>
-            <div class="hdr-t">Jadwal</div>
+        <div class="topbar" style="align-items:center; justify-content:space-between; margin-top:12px; margin-bottom:28px; display:flex;">
+          
+          <div style="flex:1; min-width:0; padding-right:10px;">
+            <div class="hdr-s" id="menuGreeting" style="text-transform:none; font-size:13px; letter-spacing:0; color:var(--t2); font-weight:500; margin-bottom:2px;">Menyiapkan...</div>
+            <div class="hdr-t" style="font-size:34px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jadwal</div>
           </div>
-          <div class="topbar-right">
-            <div class="user-chip"><span id="userChip">—</span></div>
-            <button class="logout-btn" onclick="doLogout()">Keluar</button>
+          
+          <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; background:var(--inp); padding:4px 4px 4px 12px; border-radius:30px; border:0.5px solid var(--sep2); flex-shrink:0;">
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+              <span id="userChip" style="font-size:13px; font-weight:600; color:var(--t); letter-spacing:-0.2px; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</span>
+              <button class="logout-btn" onclick="doLogout()" style="font-size:11px; padding:0; color:var(--red);">Keluar</button>
+            </div>
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #0a84ff, #5e5ce6); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; box-shadow:0 2px 8px rgba(0,0,0,0.2); flex-shrink:0;">
+              👨‍💻
+            </div>
           </div>
+
         </div>
+
+        <script>
+          (function(){
+            const hr = new Date().getHours();
+            const gr = document.getElementById('menuGreeting');
+            if(hr < 11) gr.innerHTML = '☀️ Selamat Pagi,';
+            else if(hr < 15) gr.innerHTML = '🌤️ Selamat Siang,';
+            else if(hr < 18) gr.innerHTML = '🌥️ Selamat Sore,';
+            else gr.innerHTML = '🌙 Selamat Malam,';
+          })();
+        </script>
 
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
           <div class="quick-note-card" onclick="navTo(1)" style="padding:18px;">
@@ -1399,10 +1355,7 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;" id="dSecWrap">
           <div class="sl" id="dSec" style="display:none">Jadwal</div>
-          <div class="view-toggle-wrap" id="viewToggleWrap" style="display:none;">
-            <button class="view-toggle-btn" id="btnViewTimeline" onclick="setDailyView('timeline')">⏱ Timeline</button>
-            <button class="view-toggle-btn on" id="btnViewList" onclick="setDailyView('list')">☰ List</button>
-          </div>
+          <div id="dTimeline" style="display:none;"></div>
         </div>
         <div class="list" id="dList"></div>
         <div id="dTimeline" style="display:none;"></div>
@@ -1461,26 +1414,16 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
   </div>
 
-  <div class="topbar" style="margin-bottom:10px; align-items:center;">
-
-    <div>
-
+  <div class="topbar" style="margin-bottom:20px; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div style="flex:1; min-width:140px;">
       <div class="hdr-s" id="calMonthSubLbl">Jadwal</div>
-
-      <div class="hdr-t" id="calMonthTitle">Bulanan</div>
-
+      <div class="hdr-t" id="calMonthTitle" style="font-size:28px; line-height:1.2; letter-spacing:-0.8px;">Bulanan</div>
     </div>
-
-    <div style="display:flex;gap:8px;align-items:center;">
-
-      <button onclick="calPrevMonth()" style="width:34px;height:34px;border-radius:50%;background:var(--inp);border:0.5px solid var(--sep2);color:var(--t);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">‹</button>
-
-      <button onclick="calGoToday()" style="font-size:12px;font-weight:700;padding:6px 12px;color:var(--accent);background:var(--accent-glass);border:none;border-radius:12px;cursor:pointer;">Hari Ini</button>
-
-      <button onclick="calNextMonth()" style="width:34px;height:34px;border-radius:50%;background:var(--inp);border:0.5px solid var(--sep2);color:var(--t);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">›</button>
-
+    <div style="display:flex; gap:4px; align-items:center; background:var(--inp); padding:4px; border-radius:14px; border:0.5px solid var(--sep2);">
+      <button onclick="calPrevMonth()" style="width:36px;height:36px;border-radius:10px;background:transparent;border:none;color:var(--t);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s;">‹</button>
+      <button onclick="calGoToday()" style="font-size:13px;font-weight:600;padding:0 14px;height:36px;color:var(--t);background:var(--bg-secondary);border:none;border-radius:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);">Hari Ini</button>
+      <button onclick="calNextMonth()" style="width:36px;height:36px;border-radius:10px;background:transparent;border:none;color:var(--t);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s;">›</button>
     </div>
-
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;max-width:500px;margin-left:auto;margin-right:auto;">
@@ -1505,9 +1448,13 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
 
   <div id="calDayDetail" style="display:none;">
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-
-      <div id="calSelDateBadge" style="font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-glass);padding:5px 12px;border-radius:12px;"></div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      
+      <div style="display:flex; align-items:center; gap:8px;" id="calDateBadgesWrap">
+        <div id="calSelDateBadge" style="font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-glass);padding:5px 12px;border-radius:12px;"></div>
+      </div>
+      
+      <button class="fab" id="calFab" onclick="openAddModal('m')" title="Tambah jadwal bulanan" style="width:32px; height:32px; font-size:24px; border-radius:16px; box-shadow:none; flex-shrink:0; font-weight:300;">+</button>
 
     </div>
 
@@ -1524,10 +1471,13 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
       <div class="page-sticky-hdr-inner" id="stickyInner3">        <span class="sticky-title">Catatan</span>
       </div>
     </div>
-        <div class="topbar" style="margin-bottom:16px">
-          <div><div class="hdr-s">Tersinkron ke cloud</div><div class="hdr-t">Catatan</div></div>
-          <div class="fab-wrap" style="margin:0">
-            <button class="fab" id="notesFab" onclick="newNote()" title="Catatan baru" style="width:38px;height:38px;font-size:18px">+</button>
+        <div class="topbar" style="margin-bottom:16px; align-items:flex-start;">
+          <div style="margin-top: 4px;">
+            <div class="hdr-s" style="text-transform:none; font-size:14px; letter-spacing:0; color:var(--t2); font-weight:500; margin-bottom:4px;">Tersinkron ke cloud</div>
+            <div class="hdr-t" style="font-size:36px;">Catatan</div>
+          </div>
+          <div class="fab-wrap" style="margin:0;">
+            <button class="fab" id="notesFab" onclick="newNote()" title="Catatan baru" style="width:38px;height:38px;font-size:26px;border-radius:19px;font-weight:300;">+</button>
           </div>
         </div>
 
@@ -1545,10 +1495,6 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
           <div class="empty-s">Ketuk + untuk mulai menulis</div>
       </div>
     </div>
-  </div>
-
-  <div id="calFabWrap" style="position:fixed; bottom:95px; right:20px; z-index:300; display:none;">
-    <button class="fab" id="calFab" onclick="openAddModal('m')" title="Tambah jadwal bulanan" style="width:58px; height:58px; font-size:32px; box-shadow:0 8px 24px rgba(10,132,255,0.4);">+</button>
   </div>
 
   <nav class="nav-bar" id="navBar">
@@ -1740,15 +1686,15 @@ button:active:not(.m-btn-ctrl):not(.ios-seg-btn), .nav-item:active, .cat-item:ac
       <div class="add-form-field" id="editSifatField" style="display:none; margin-bottom: 4px;">
         <div class="add-form-lbl">Sifat Tugas</div>
         <style>
-          /* UI Dibuat lebih ringkas agar pas di semua device */
-          .sf-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:2px; width:100%; box-sizing:border-box; }
-          .sf-card { position:relative; background:var(--inp); border:1.5px solid var(--sep2); border-radius:12px; padding:12px 6px; cursor:pointer; transition:0.2s; text-align:center; box-sizing:border-box; min-width:0; }
-          .sf-card.on { background:var(--bg-secondary); border-color:var(--accent); box-shadow:0 4px 10px var(--accent-glow); }
-          .sf-card.on .sf-title { color:var(--accent); }
-          .sf-info-btn { position:absolute; top:4px; left:4px; color:var(--t2); font-size:11px; width:20px; height:20px; border:1.5px solid var(--t2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:serif; font-style:italic; font-weight:bold; transition:0.2s; z-index:1; }
+          /* UI Sifat Tugas Dirombak Jadi Flexbox Rapih (iOS Style) */
+          .sf-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; width:100%; box-sizing:border-box; }
+          .sf-card { display:flex; align-items:center; justify-content:center; gap:8px; background:var(--inp); border:1px solid var(--sep2); border-radius:14px; padding:14px 8px; cursor:pointer; transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1); box-sizing:border-box; }
+          .sf-card.on { background:var(--bg-secondary); border-color:var(--accent); box-shadow:0 4px 12px var(--accent-glow); transform:scale(1.02); }
+          .sf-info-btn { position:relative; flex-shrink:0; color:var(--t2); font-size:12px; width:22px; height:22px; border:1.5px solid var(--t2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:serif; font-style:italic; font-weight:bold; transition:0.2s; }
           .sf-info-btn:active { transform:scale(0.85); background:var(--t2); color:var(--bg); }
           .sf-card.on .sf-info-btn { color:var(--accent); border-color:var(--accent); }
-          .sf-title { font-size:12px; font-weight:600; color:var(--t2); margin-top:8px; transition:0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          .sf-title { font-size:13px; font-weight:600; color:var(--t2); transition:0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:0; }
+          .sf-card.on .sf-title { color:var(--accent); }
         </style>
         <div class="sf-grid">
           <div class="sf-card" id="esToday" onclick="setEditSifat('today')">
@@ -2821,25 +2767,23 @@ function renderDaily(){
         if(!sblm){
           _flashDone(card.outer,true);
           setTimeout(()=>{
-            card.outer.style.transition='transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, max-height 0.4s ease';
-            card.outer.style.transform='translateX(18px)';
-            card.outer.style.opacity='0.4';
-            setTimeout(()=>renderDaily(),380);
-          },700);
+            card.outer.style.transition='all 0.4s cubic-bezier(0.4,0,0.2,1)';
+            card.outer.style.transform='scale(0.95) translateY(10px)';
+            card.outer.style.opacity='0';
+            card.outer.style.maxHeight='0px';
+            card.outer.style.marginBottom='0px';
+            setTimeout(()=>renderDaily(),400);
+          },650);
         } else {
-          card.outer.style.transition='transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
-          card.outer.style.transform='translateX(-12px)';
-          setTimeout(()=>renderDaily(),280);
+          card.outer.style.transition='all 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+          card.outer.style.transform='scale(1.02)';
+          setTimeout(()=>renderDaily(),300);
         }
       },
       isWeekly:false});
     list.appendChild(card.outer);
   });
   updateStats();
-  
-  const vt=document.getElementById('viewToggleWrap');
-  if(vt)vt.style.display=daily.length>0?'flex':'none';
-  if(_dailyView==='timeline')renderTimeline();
 } 
 // Fungsi pintar untuk mencari tanggal pasti di minggu ini
 function getDateForCurrentWeek(dayKey) {
@@ -2997,7 +2941,30 @@ function buildPills(){
   updatePD();updateWLbl();
 }
 function selDay_(k){selDay=k;KEYS.forEach(d=>document.getElementById(`p${d}`).classList.toggle('on',d===k));updateWLbl();renderWeekly();haptic(10)}
-function updatePD(){KEYS.forEach(k=>{const pd=document.getElementById(`pd${k}`);if(!pd)return;pd.innerHTML='';const items=weekly[k]||[];items.slice(0,3).forEach(it=>{const d=document.createElement('div');const cat=getCat(it.cat);d.className='pdot';d.style.backgroundColor=cat.color||'var(--t)';pd.appendChild(d)})})}
+function updatePD(){
+  KEYS.forEach(k=>{
+    const pd=document.getElementById(`pd${k}`);
+    if(!pd)return;
+    pd.innerHTML='';
+    
+    // Gabungkan jadwal mingguan dengan jadwal bulanan yang tertransfer
+    let items=[...(weekly[k]||[])];
+    const targetDate = getDateForCurrentWeek(k);
+    const monthlyForThisDay = monthlyData.filter(m => m.date === targetDate);
+    monthlyForThisDay.forEach(m => {
+      const already = items.find(w => w.label === m.label && w.time === m.time);
+      if(!already) items.push({...m, is_from_monthly: true, dbId: m.id});
+    });
+    
+    items.slice(0,3).forEach(it=>{
+      const d=document.createElement('div');
+      const cat=getCat(it.cat);
+      d.className='pdot';
+      d.style.backgroundColor=cat.color||'var(--accent)'; 
+      pd.appendChild(d);
+    });
+  });
+}
 function updateWLbl(){const name=FULL[KEYS.indexOf(selDay)];document.getElementById('wSec').textContent=`Jadwal ${name}`}
 
 const PAGE_COUNT=5;
@@ -3484,228 +3451,6 @@ async function saveQuickNote(text){
   haptic([10,5,20]);
 }
 
-let _dailyView='list';
-let _timelineNowInterval=null;
-
-function _updateTimelineNow(){
-  const wrap=document.getElementById('dTimeline');
-  if(!wrap)return;
-  const tl=wrap.querySelector('.timeline-wrap');
-  if(!tl)return;
-  const nowLine=tl.querySelector('.timeline-now-line');
-  const nowDot=tl.querySelector('.timeline-now-dot');
-  const nowLbl=tl.querySelector('.timeline-now-label');
-  if(!nowLine||!nowDot)return;
-  const firstH=parseInt(nowLine.dataset.firstH||0);
-  const lastH=parseInt(nowLine.dataset.lastH||24);
-  const now=new Date();
-  const nowH=now.getHours();
-  const nowMin=now.getMinutes();
-  const nowMins=nowH*60+nowMin;
-  const firstMins=firstH*60;
-  const lastMins=lastH*60;
-  if(nowMins<firstMins||nowMins>lastMins)return;
-  // 1 jam = 80px, 1 menit = 80/60 px
-  const PX_PER_HOUR=80;
-  const PX_PER_MIN=PX_PER_HOUR/60;
-  const top=(nowMins-firstMins)*PX_PER_MIN;
-  nowLine.style.top=top+'px';
-  nowLine.style.top=top+'px';
-  if(nowLbl)nowLbl.style.top=top+'px';
-}
-
-function _startTimelineNowInterval(){
-  // Tunggu DOM render dulu baru hitung posisi
-  setTimeout(()=>{
-    _updateTimelineNow();
-    if(_timelineNowInterval)clearInterval(_timelineNowInterval);
-    _timelineNowInterval=setInterval(_updateTimelineNow,30000);
-  },100);
-}
-function setDailyView(v){
-  _dailyView=v;
-  document.getElementById('btnViewList').classList.toggle('on',v==='list');
-  document.getElementById('btnViewTimeline').classList.toggle('on',v==='timeline');
-  document.getElementById('dList').style.display=v==='list'?'flex':'none';
-  document.getElementById('dTimeline').style.display=v==='timeline'?'block':'none';
-  if(v==='timeline'){renderTimeline();_startTimelineNowInterval();}
-  else{if(_timelineNowInterval){clearInterval(_timelineNowInterval);_timelineNowInterval=null;}}
-  haptic(10);
-} 
-
-function renderTimeline(){
-  const wrap=document.getElementById('dTimeline');
-  if(!wrap)return;
-  wrap.innerHTML='';
-  const q=searchQ['d'];
-
-  let combinedDaily = [...daily];
-  const todayKey = KEYS[(new Date().getDay()+6)%7];
-  const todayWeekly = (weekly[todayKey]||[]).filter(it=>it.perm||it.daily_repeat||(it.week_added===THIS_WEEK));
-  todayWeekly.forEach(w => {
-    const already = combinedDaily.find(d => d.label === w.label && d.time === w.time);
-    if(!already) combinedDaily.push({...w, is_from_weekly: true});
-    else already.is_from_weekly = true;
-  });
-
-  // INJEKSI OTOMATIS: Jadwal Bulanan ke Timeline
-  const monthlyToday = monthlyData.filter(m => m.date === TODAY_KEY);
-  monthlyToday.forEach(m => {
-    const already = combinedDaily.find(d => d.label === m.label && d.time === m.time);
-    if(!already) combinedDaily.push({...m, is_from_monthly: true, dbId: m.id});
-    else already.is_from_monthly = true;
-  });
-
-  const filtered=q?combinedDaily.filter(it=>it.label.toLowerCase().includes(q)||(getCat(it.cat).name||'').toLowerCase().includes(q)):combinedDaily;
-  if(!filtered.length)return;
-
-  // Sorted by time
-  const sorted=[...filtered].sort((a,b)=>a.time.localeCompare(b.time));
-
-  // Range jam: mulai dari jam pertama task, sampai jam terakhir+1
-  const firstH=parseInt(sorted[0].time.split(':')[0]);
-  const lastH=parseInt(sorted[sorted.length-1].time.split(':')[0])+1;
-  const totalMins=(lastH-firstH)*60;
-
-  const tl=document.createElement('div');
-  tl.className='timeline-wrap';
-
-  // Garis vertikal
-  const line=document.createElement('div');
-  line.className='timeline-line';
-  tl.appendChild(line);
-
-// Current time indicator — posisi dihitung setelah DOM siap
-  const nowLine=document.createElement('div');
-  nowLine.className='timeline-now-line';
-  nowLine.dataset.firstH=firstH;
-  nowLine.dataset.lastH=lastH;
-  nowLine.style.top='0px';
-  const nowLbl=document.createElement('div');
-  nowLbl.className='timeline-now-label';
-  nowLbl.style.top='0px';
-  nowLbl.textContent='Sekarang';
-  tl.appendChild(nowLine);
-  tl.appendChild(nowLbl);
-
-  // Render per jam
-  for(let h=firstH;h<=lastH;h++){
-    const hourEl=document.createElement('div');
-    hourEl.className='timeline-hour';
-
-    const lbl=document.createElement('div');
-    lbl.className='timeline-hour-lbl';
-    lbl.textContent=String(h).padStart(2,'0')+':00';
-    hourEl.appendChild(lbl);
-    const tick=document.createElement('div');
-    tick.className='timeline-hour-tick';
-    hourEl.appendChild(tick);
-
-    // Task di jam ini
-    const tasks=sorted.filter(it=>parseInt(it.time.split(':')[0])===h);
-    tasks.forEach(it=>{
-      const done=isDone(it.dbId);
-            const catColor='var(--accent)';
-      const prio=it.priority||'normal';
-
-      const dot=document.createElement('div');
-      dot.className='timeline-dot'+(done?' done':'')+(prio==='urgent'?' urgent':'');
-      dot.style.borderColor=done?'var(--t3)':prio==='urgent'?'var(--red)':catColor;
-      dot.style.boxShadow=done?'none':prio==='urgent'?'0 0 0 3px rgba(255,69,58,0.25)':`0 0 0 3px ${catColor}44`;
-      hourEl.appendChild(dot);
-
-      const card=document.createElement('div');
-      card.className='timeline-card'+(done?' done':'')+(prio==='urgent'?' prio-urgent':'');
-
-      card.style.borderLeftColor=done?'#555':prio==='urgent'?'var(--red)':catColor;
-      const bar=document.createElement('div');
-      bar.className='timeline-card-bar';
-      bar.style.background=done?'var(--t3)':catColor;
-
-      const title=document.createElement('div');
-      title.className='timeline-card-title';
-      title.textContent=it.label;
-
-      const meta=document.createElement('div');
-      meta.className='timeline-card-meta';
-
-      const timeChip=document.createElement('span');
-      timeChip.className='timeline-card-time';
-      timeChip.textContent=fmt(it.time);
-      meta.appendChild(timeChip);
-
-
-      if(prio&&prio!=='normal'){
-        const pl=priorityLabel(prio);
-        const prioChip=document.createElement('span');
-        prioChip.className=`priority-badge ${pl.cls}`;
-        prioChip.textContent=`${pl.icon} ${pl.text}`;
-        meta.appendChild(prioChip);
-      }
-        if(hasTasksForItem(it.dbId)){
-      const taskChip=document.createElement('span');
-      taskChip.className='timeline-card-cat'; 
-      taskChip.style.background='var(--accent-glass)';
-      taskChip.style.color='var(--accent)';
-      taskChip.textContent='📋 Ada Tugas';
-      meta.appendChild(taskChip);
-    }
-    if(it.is_from_weekly){
-      const weeklyChip=document.createElement('span');
-      weeklyChip.className='timeline-card-cat'; 
-      weeklyChip.style.background='var(--accent-glass)';
-      weeklyChip.style.color='var(--accent)';
-      weeklyChip.textContent='🔄 Task Mingguan';
-      meta.appendChild(weeklyChip);
-    }
-    if(it.is_from_monthly){
-      const monthlyChip=document.createElement('span');
-      monthlyChip.className='timeline-card-cat'; 
-      monthlyChip.style.background='rgba(255,159,10,0.15)';
-      monthlyChip.style.color='#ff9f0a';
-      monthlyChip.textContent='🗓 Dari Bulanan';
-      meta.appendChild(monthlyChip);
-    }
-    if(it.is_task){
-      const taskTypeChip=document.createElement('span');
-      taskTypeChip.className='timeline-card-cat'; 
-      taskTypeChip.style.background='rgba(48,209,88,0.15)';
-      taskTypeChip.style.color='#30d158';
-      taskTypeChip.textContent='📋 Tugas';
-      meta.appendChild(taskTypeChip);
-    }
-
-      card.appendChild(bar);
-      card.appendChild(title);
-      card.appendChild(meta);
-
-      // Tap to toggle done
-      card.addEventListener('click',()=>{
-        const sblm=isDone(it.dbId);
-        toggleDone(it.dbId);
-        updateStats();
-        // Update status ke cloud jika ini adalah 'Tugas'
-        if(it.is_task) {
-          const isNowDone = !sblm;
-          it.is_completed = isNowDone;
-          sb.from('daily_items').update({is_completed: isNowDone}).eq('id', it.dbId).then();
-        }
-        if(!sblm){
-          _flashDone(card,true);
-          setTimeout(()=>renderTimeline(),900);
-        } else {
-          renderTimeline();
-        }
-      });
-
-      hourEl.appendChild(card);
-    });
-
-    tl.appendChild(hourEl);
-  }
-
-  wrap.appendChild(tl);
-}
 init();
 
 /* ══════════════════════════════════
